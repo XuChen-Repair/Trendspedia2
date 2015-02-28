@@ -1,0 +1,58 @@
+[
+    {
+        "pk": 1,
+        "model": "auth.user",
+        "fields": {
+            "username": "u0909059",
+            "first_name": "JC",
+            "last_name": "Chen",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": false,
+            "last_login": "2013-03-26T08:46:23.454Z",
+            "groups": [],
+            "user_permissions": [],
+            "password": "!",
+            "email": "",
+            "date_joined": "2013-03-24T06:23:38.492Z"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "social_auth.usersocialauth",
+        "fields": {
+            "uid": "929652174",
+            "extra_data": "{\"access_token\": \"oauth_token_secret=BAuyuO4jW5m4wdltPzN7NH1t1PXdiCjhzQV5J88lCW8&oauth_token=929652174-Dh97rhW5L6JSLaPTZ6D4fwniiRJhoTkGYh2jOagR\", \"id\": 929652174}",
+            "user": 1,
+            "provider": "twitter"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "auth.user",
+        "fields": {
+            "username": "hdt91",
+            "first_name": "Tran",
+            "last_name": "Hai Dang",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": false,
+            "last_login": "2013-04-14T07:01:15Z",
+            "groups": [],
+            "user_permissions": [],
+            "password": "!",
+            "email": "",
+            "date_joined": "2012-10-28T12:33:59Z"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "social_auth.usersocialauth",
+        "fields": {
+            "uid": "357398245",
+            "extra_data": "{\"access_token\": \"oauth_token_secret=mG5mmbKuV2PPxeCjSuy12ZdUcbwX8TCYdgGdzCtg7A&oauth_token=357398245-64lV75nsaltMN1Xchiuu391qrZPi4ZSVOm6Vfjn7\", \"id\": 357398245}",
+            "user": 2,
+            "provider": "twitter"
+        }
+    }
+]

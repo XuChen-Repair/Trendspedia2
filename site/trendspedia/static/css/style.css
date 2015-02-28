@@ -1,0 +1,18 @@
+body{
+
+}
+
+#scroller { 
+	list-style: none; 
+	padding: 1em;
+    border: 1px solid #9DB029;
+    margin: 1em 0; }
+
+#scroller li { 
+	border: 1px solid #ddd; 
+	width: 8em;
+    margin: 0.25em; 
+    padding: 0.5em; 
+    background-color: #eee; }
+	
+

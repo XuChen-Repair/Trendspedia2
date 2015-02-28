@@ -1,0 +1,541 @@
+/**
+ * @author SONG QIYUE
+ */
+var hotCount = 0;
+$(document).ready(function() {
+	$('.carousel').carousel({
+		interval : 4000
+	});
+
+	// Parse the URL and get title, handle for single parameter only === hack
+	//var api = "http://idata-a.d1.comp.nus.edu.sg:8000/getWiki";
+	//var api = "http://idata-a.d1.comp.nus.edu.sg/getWiki";
+	var api = "/getWiki";
+	var def = "?title=Main_Page";
+	var finalAPI = "";
+	var query = "";
+	var para = window.location.search;
+	var pathname = window.location.pathname;
+	var pageTitle = "";
+	var pageID = "";
+	var lang = "";
+	var since_id = "";
+	var hotMaterials = new Array();
+	var MaterialCount = 0;
+	var materialLoadAmount = 50;
+	//var hotCount = 0;
+
+	// Determine language, default is en
+	lang = pathname.split("/")[2];
+	if (lang === undefined || lang === "" || lang === null) {
+		lang = "en";
+	}
+	api += ("/" + lang + "/");
+	// Add the lang to getWiki api
+
+	//console.log('l is '+lang);
+	if (para != "") {
+		finalAPI = api + para;
+		query = para.substring('7', para.length);
+		if (query == "Main_Page") {
+			query = "";
+		}
+	} else {
+		finalAPI = api + def;
+	}
+	if (query == "") {
+		$('#tweets').hide();
+		$('#wikiArticle').removeClass('span9').addClass('span12');
+		//$('#head-nav').hide();
+	}
+
+	/* Twitter stuff */
+	var globalTweetCount = 0;
+	var newTweets = 0;
+	var AllTweets = new Array();
+
+	var getTwitter = function(query) {
+		$.getJSON('../../twitter/api/search/?q=' + query + '&pageID=' + pageID + "&result_type=recent&count=100", function(data) {
+			var tweets = [];
+			console.log("first batch of RAW new tweets:");
+			console.log(data);
+			$.each(data.statuses, function(index, element) {
+				// Post raw data
+				tweets[index] = {};
+				if (index == "0") {
+					since_id = element.id;
+				}
+				// Convert link to anchor
+				var splitter = element.text.split(" ");
+				var output = "";
+				for (var j = 0; j < splitter.length; j++) {
+					if (startsWith(splitter[j], "http://")) {
+						output += ("<a href='" + splitter[j] + "'>" + splitter[j] + "</a> ");
+					} else {
+						output += (splitter[j] + " ");
+					}
+				}
+				tweets[index].content = output;
+				tweets[index].image_url = element.user.profile_image_url;
+				tweets[index].createTime = element.created_at.replace('+0000', '');
+				var localTime = new Date(tweets[index].createTime);
+				var correctTime = new Date(localTime.getTime() + 28800 * 1000);
+				tweets[index].createTime = correctTime.toString().replace("GMT+0800 (SGT)", "");
+				tweets[index].name = element.user.name;
+				tweets[index].id = element.id_str;
+			});
+			/*render new tweets into the tweets list*/
+			for (var i = tweets.length - 1; i >= 0; i--) {
+				if (AllTweets.length >= 100) {
+					AllTweets.splice(0, 1);
+				}
+				AllTweets[AllTweets.length] = tweets[i];
+			}
+			for (var i = 0; i < AllTweets.length; i++) {
+				$('#scroller').prepend('<li>' + '<img src = "' + AllTweets[i].image_url + '">&nbsp;' + '<span>' + AllTweets[i].name + ': </span>' + '<p style = "font-weight:100;font-size:12px;">' + AllTweets[i].content + '</p>' + '<div style = "font-size:14px;">' + AllTweets[i].createTime + '</div>' + '</li>');
+			}
+		});
+	}
+	var getFollowingTwitter = function(query) {
+		$.getJSON('../../twitter/api/search/?q=' + query + '&pageID=' + pageID + "&result_type=recent&count=20&since_id=" + since_id, function(data) {
+			var tweets = [];
+			console.log("following batch of RAW new tweets:");
+			console.log(data);
+			var proceed = true;
+			$.each(data.statuses, function(index, element) {			
+				if(element.id_str == AllTweets[AllTweets.length - 1].id){
+					proceed = false;
+				}
+				if(proceed){
+					tweets[index] = {};
+					if (index == "0") {
+						since_id = element.id;
+					}
+					// Convert link to anchor
+					var splitter = element.text.split(" ");
+					var output = "";
+					for (var j = 0; j < splitter.length; j++) {
+						if (startsWith(splitter[j], "http://")) {
+							output += ("<a href='" + splitter[j] + "'>" + splitter[j] + "</a> ");
+						} else {
+							output += (splitter[j] + " ");
+						}
+					}
+					tweets[index].content = output;
+					tweets[index].image_url = element.user.profile_image_url;
+					tweets[index].createTime = element.created_at.replace('+0000', '');
+					var localTime = new Date(tweets[index].createTime);
+					var correctTime = new Date(localTime.getTime() + 28800 * 1000);
+					tweets[index].createTime = correctTime.toString().replace("GMT+0800 (SGT)", "");
+					tweets[index].name = element.user.name;
+					tweets[index].id = element.id_str;
+					}
+			});
+			/*render new tweets into the tweets list*/
+			loadMore(tweets);
+		});
+	}
+
+	//warning: testing
+	var display, key, text;
+        model=BubbleEntity();
+        plot = Bubbles();
+        if(location.hash.length>2){
+        	current_page=decodeURIComponent(location.hash.substring(1)).trim();
+        }
+	//else
+        //	location.hash="#"+current_page;
+        
+        d3.select("#status").html("<h3>Home: <span class=\"active\">"+current_page+"</span></h3>");
+        querytags=current_page;
+        display = function(root) {
+        	var data = [];
+            var input = root.catelist;
+            var log10 = Math.log(10);
+           
+          
+            for (var i = 0; i < input.length; i++) {
+            	CATEGORIES.push(input[i].category);
+            	var cat=input[i].list;
+                for(var j=0;j<cat.length;j++){
+                    var push_data = {
+                        name: cat[j].title,
+                        group: input[i].category,
+                        force: parseInt(cat[j].weight*100)/100.0,
+                        value: cat[j].tf,
+                    };
+                    data.push(push_data);
+                    
+                }
+            }
+            data.forEach(function(d){
+        		
+	    		d.tag=false;
+	    		if(d.force>2.5){
+	    			d.tag=true;
+	    		}
+	    		if(current_page==d.name){
+                	d.lock=true;
+                	//d.value=20;
+			model.focus().push(d);
+	    		}
+        	});
+            GROUP=CATEGORIES.length;
+            return d3.select("#vis").datum(data).call(plot);
+        };
+        other_initial();
+
+	// Dump the content of wiki pages using the URL
+	var loadCounter = 0;
+	var loadWiki = function(finalAPI) {
+		if (loadCounter > 10) {
+			$("#contentArea").html("Error loading. There might be no such page");
+			$(".mw-body").css("margin-left", 0);
+			return;
+		}
+		console.log(finalAPI);
+		$.getJSON(finalAPI, function(data) {
+			// Update html
+			console.log("wiki object:");
+			console.log(data);
+			$("#contentArea").html(data.text);
+			$('.container-fluid').show();
+			pageID = data.pageID;
+			callGenerateTagCloud(pageID);
+			pageTitle = data.title;
+			$('#loadMore').click(function() {
+				$('#loadMore').text('No New Tweets');
+				newTweets = 0;
+				$("#scroller li").remove();
+				for (var i = 0; i < AllTweets.length; i++) {
+					$('#scroller').prepend('<li>' + '<img src = "' + AllTweets[i].image_url + '">&nbsp;' + '<span>' + AllTweets[i].name + ': </span>' + '<p style = "font-weight:100;font-size:12px;">' + AllTweets[i].content + '</p>' + '<div style = "font-size:14px;">' + AllTweets[i].createTime + '</div>' + '</li>');
+				}
+			});
+			// Update query for Twitter call
+			query = pageTitle;
+
+			/*load hot materials*/
+			$.getJSON("../../twitter/hotMaterials?pageID=" + pageID, function(data) {
+				console.log("hot meterials:");
+			console.log(data);
+				hotMaterials = data.hotMaterials;
+				while(MaterialCount < materialLoadAmount){
+					if(MaterialCount <= hotMaterials.length - 1){
+						presentMaterialsContent(hotMaterials[MaterialCount]);	
+						MaterialCount++;
+					}else{
+						break;
+					}
+				}
+			});
+			$(".mw-body").css("margin-left", 0);
+			if(query == "Main Page"){
+				//$('#trendNav').hide();
+				$("#articleNav").hide();
+				$("#analysisNav").hide();
+			}
+			if (query != "" && query != "Main Page") {
+				//$('#trendNav').show();
+				$("#articleNav").show();
+				$("#analysisNav").show();
+				$('#wikiArticle').removeClass('span12').addClass('span9');
+				$('#tweets').show();
+				//$('#head-nav').show();
+				getTwitter(query);
+				current_page = pageTitle;
+				d3.json("http://idata-a.d1.comp.nus.edu.sg:8080/bubbles/api/wiki/pagetags?titles="+pageTitle, display);
+				setInterval(function() {
+					getFollowingTwitter(query);
+				}, 30000);
+			} else {
+				$('#firstHeading').html("<span dir='auto'>Trendspedia</span>");
+			}
+		}).error(function(e) {
+			loadCounter++;
+			console.log("Error! Try to load again");
+			loadWiki(finalAPI);
+		});
+	};
+	// StartWith for JS string
+	var startsWith = function(source, target) {
+		return source.indexOf(target) == 0;
+	}
+	var loadMore = function(tweets) {
+		for (var i = tweets.length - 1; i >= 0; i--) {
+			newTweets++;
+			if (AllTweets.length > 100) {
+				AllTweets.splice(0, 1);
+			}
+			AllTweets[AllTweets.length] = tweets[i];
+		}
+		if (tweets.length != 0) {
+			$("#loadMore").text(newTweets + " New Tweets");
+		}
+	}
+	var Enter = function() {
+		var key = $('#wikiSearch input').val();
+		getSearchResult(key);
+	}
+	var getSearchResult = function(keyword) {
+		if (keyword.replace(" ", "") != "") {
+			var lang = "";
+			// Determine language, default is en
+			lang = window.location.pathname.split("/")[2];
+			if (lang === undefined || lang === "" || lang === null) {
+				lang = "en";
+			}
+			var api = "/getSearchResult/" + lang + "/?query=" + encodeURIComponent(keyword);
+			$.getJSON(api, function(data) {
+				if (data.status == "OK") {
+					$('#tweets').removeClass('span3');
+					$('#tweets').hide();
+					$('#wikiArticle').removeClass('span9').addClass('span12');
+					if (data.results.length > 0) {
+						$('.tabbable').hide();
+						var resultTemplate = "<h1>Results</h1>" + "<ul>" + "{{#results}}" + "<li>" + "<b>Text</b>: {{text}} </br>" + "<b>Description</b>: {{description}} </br>" + "<a href={{url}}>Click here</a></br>" + "</li>" + "{{/results}}";
+						var html = Mustache.to_html(resultTemplate, data);
+						$('#searchResult').html(html);
+						$('#searchResult').show();
+						$('#contentArea').hide();
+					} else {
+						$('.tabbable').hide();
+						var noResult = "<h1>No result found</h1>";
+						$('#searchResult').html(noResult);
+						$('#searchResult').show();
+					}
+				}
+			});
+		}
+	}
+	var getRelatedWikiResult = function(keyword) {
+		if (keyword.replace(" ", "") != "") {
+			var lang = "";
+			// Determine language, default is en
+			lang = window.location.pathname.split("/")[2];
+			if (lang === undefined || lang === "" || lang === null) {
+				lang = "en";
+			}
+			var api = "/getSearchResult/" + lang + "/?query=" + encodeURIComponent(keyword);
+			$.getJSON(api, function(data) {
+				if (data.status == "OK") {
+					if (data.results.length > 0) {
+						var resultTemplate = "<h1>" + keyword + "</h1>" + "<ul>" + "{{#results}}" + "<li>" + "<b>Text</b>: {{text}} </br>" + "<b>Description</b>: {{description}} </br>" + "<a href={{url}}>Click here</a></br>" + "</li>" + "{{/results}}";
+						var html = Mustache.to_html(resultTemplate, data);
+						$('#wikipage').html(html);
+						$('#wikipage').show();
+						$("#wikipage").css('height', $("#contentArea").height());
+					} else {
+						var noResult = "<h1>No result found</h1>";
+						$('#wikipage').html(noResult);
+						$('#wikipage').show();
+						$("#wikipage").css('height', $("#contentArea").height());
+					}
+				}
+			});
+		}
+	}
+	//loading the page
+	loadWiki(finalAPI);
+
+	$('#wikiSearch').submit(function() {
+		Enter();
+		return false;
+	});
+
+	$("#brand").click(function() {
+		window.location = "../../home";
+	});
+
+	$("#loadMaterials").click(function() {
+		var limit = MaterialCount + materialLoadAmount;
+		while (MaterialCount < limit){
+			if(MaterialCount <= hotMaterials.length - 1){
+				presentMaterialsContent(hotMaterials[MaterialCount]);	
+				MaterialCount++;
+			}else
+			{
+				break;
+			}
+		}
+	});
+
+	$("#article").click(function() {
+		$("#AnalysisArea").hide();
+		$("#contentArea").show();
+		return false;
+	});
+
+	$(".AnalysisPage").click(function(){
+		$("#AnalysisArea").show();
+		$("#contentArea").hide();
+		return false;
+	});
+
+	$('#hot').click(function() {
+		$('#hotpage').show();
+		$('#summarypage').hide();
+		$('#wikipage').hide();
+		$('#interactive').hide();
+		return false;
+	});
+
+	$('#wikis').click(function() {
+		$('#hotpage').hide();
+		$('#summarypage').hide();
+		$('#wikipage').show();
+		$('#interactive').hide();
+		getRelatedWikiResult(query);
+		return false;
+	});
+
+	$('#summary').click(function() {
+		$('#hotpage').hide();
+		$('#summarypage').show();
+		$('#wikipage').hide();
+		$('#interactive').hide();
+		return false;
+	});
+
+	$("#bubble").click(function(){
+		$('#hotpage').hide();
+                $('#summarypage').hide();
+                $('#wikipage').hide();
+		$('#interactive').show();
+		return false;
+	});
+
+	if ($('#username').html() == "") {
+		$('#username').html('Trendspedia');
+	}
+
+	$('#scroller').css('height', $(document).height() - 250);
+	$("#contentArea").css('height', $(document).height() - 150);
+	$("#hot-Materials").css('height', $(document).height() - 200);
+});
+
+
+function requestTitle(site, callback) {
+
+	// If no url was passed, exit.
+	if (!site) {
+		alert('No site was passed.');
+		return false;
+	}
+	// Take the provided url, and add it to a YQL query. Make sure you encode it!
+	var yql = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select content from html where url="' + site + '" and xpath = "//title"') + '&format=xml&callback=?';
+
+	// Request that YSQL string, and run a callback function.
+	// Pass a defined function to prevent cache-busting.
+	$.getJSON(yql, cbFunc);
+
+	function cbFunc(data) {
+		//console.log(data);
+		// If we have something to work with...
+		if (data.results[0]) {
+			// Strip out all script tags, for security reasons.
+			// BE VERY CAREFUL. This helps, but we should do more.
+			//data = data.results[0].replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+			// If the user passed a callback, and it
+			// is a function, call it, and send through the data var.
+			if ( typeof callback === 'function') {
+				callback(data);
+			}
+		}
+		// Else, Maybe we requested a site that doesn't exist, and nothing returned.
+		else {
+			//console.log("no title");
+			callback("");
+		}
+	}
+
+}
+
+function requestDescription(site, callback) {
+
+	// If no url was passed, exit.
+	if (!site) {
+		alert('No site was passed.');
+		return false;
+	}
+	// Take the provided url, and add it to a YQL query. Make sure you encode it!
+	var yql = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from html where url="' + site + '" and xpath = "//meta" and name="description"') + '&format=xml&callback=?';
+
+	// Request that YSQL string, and run a callback function.
+	// Pass a defined function to prevent cache-busting.
+	$.getJSON(yql, cbFunc);
+
+	function cbFunc(data) {
+		//console.log(data);
+		// If we have something to work with...
+		if (data.results[0]) {
+			// Strip out all script tags, for security reasons.
+			// BE VERY CAREFUL. This helps, but we should do more.
+			//data = data.results[0].replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+			// If the user passed a callback, and it
+			// is a function, call it, and send through the data var.
+			if ( typeof callback === 'function') {
+				callback(data);
+			}
+		}
+		// Else, Maybe we requested a site that doesn't exist, and nothing returned.
+		else {
+			///console.log("no description");
+			callback("");
+		}
+	}
+}
+
+function presentMaterialsContent(hotMaterial){
+	var url = hotMaterial.url;
+	requestTitle(url, function(data) {
+		if (data != "" && data.results.length != 0) {
+			var title = data.results[0].replace(/<title>/g, "").replace(/<\/title>/g, "").replace(/<title\/>/g,"");
+			if(title != ""){
+				console.log("title is:"+title);
+				requestDescription(url, function(desc) {
+					if (desc != "" && desc.results.length != 0) {
+						console.log("description is:"+desc);
+						hotCount++;
+						var d = desc.results[0].replace('<meta content=', '').replace('name="description"/>', '');
+						if(d != ""){
+							if(d.length > 250){
+								d = d.substring(0,250)+"...";
+							}	
+							$("#hot-Materials").append("<dt>"+
+								"<font>"+hotCount+".</font><a href = '"+url+"'>"+title+"</a>"+
+								"<br>"+
+								"<p>"+d+"</p>"+
+								"<br>"+
+								"<div id = '"+hotMaterial.tweetID+"' class = 'row-fluid'></div>"+
+							"</dt>");
+						}else{
+							$("#hot-Materials").append("<dt>"+
+								"<font>"+hotCount+".</font><a href = '"+url+"'>"+title+"</a>"+
+								"<br>"+
+								"<div id = '"+hotMaterial.tweetID+"' class = 'row-fluid'></div>"+
+							"</dt>");
+						}
+						var count = 0;
+						if(hotMaterial.images.length < 4){
+							count = hotMaterial.images.length;
+						}else{
+							count = 4;
+						}
+						for(var i = 0;i < count;i++){
+							$("#"+hotMaterial.tweetID).append('<div class = "span3"><a href = "'+hotMaterial.images[i].url+'"><img src = "' + hotMaterial.images[i].url + '" style = "height:120px;width = 198px"/></a></div>');	
+						}
+						$("#hot-Materials dt").last().append("<br>");
+					} else {
+						console.log("cannot get the description");
+					}
+				});
+			}else{
+				console.log("title is empty");
+			}
+		}else{
+			console.log("cannot get the title");
+		}
+	});	
+}

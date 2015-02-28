@@ -1,0 +1,165 @@
+a, a:visited {
+ color:#333;
+}
+
+
+header {
+     position: absolute;
+     left:30px;
+     pointer-events:none;
+     z-index: 5;
+ }
+#details {
+     background:white;
+      position: absolute;
+      left:30px; top:75px;
+      pointer-events:none;
+      color:black;
+      text-align: left;
+  }
+
+#text-select {
+ float:right;
+ margin-right: 10px;
+}
+
+#vis {
+ overflow: hidden;
+ position: relative;
+ display: block;
+ margin:10px;
+ border:5px #000;
+/*  z-index:-1; */
+}
+
+#pages{
+
+width:500;
+}
+#history {
+
+position: absolute;
+bottom: 10px;
+left:50px;
+ background-color: #DBE8FF;
+ overflow: hidden;
+ padding: 15px;
+ z-index: 4;
+}
+#tools{
+	top:30px;
+}
+div .focused_page{
+	cursor:pointer;
+	padding:5px;
+	text-color:blue;
+}
+#tools .controls{
+	bottom:20px;
+	margin-top:30px;
+	 height:200px;
+	background:#DBE8FF;
+	padding: 15px;
+	
+}
+#tools .control-border {
+     background-color: #fff;
+ 
+     display:inline-block;
+     height:80px; width:80px;
+     position: relative;
+     text-align: center;
+     line-height: 140px;
+     padding:0px 5px 10px 5px;
+     border-radius: 10px;
+     opacity: 0.98;
+ }
+#tools .show-control {
+    /*  display:none; */
+     
+     background-image: url('http://localhost:8080/bubbles/images/play.svg');
+     background-repeat:no-repeat;
+     background-position:center top;
+     background-size:50px 50px;
+     height:80px; width:80px;
+     cursor:pointer;
+     opacity:0.6;
+     pointer-events: visiblePainted;
+     color:rgb(20,67,216);
+     
+ }
+#tools.show-control:hover { opacity:1.0; }
+#tools.play.playing {
+     background-image: url('../images/pause.svg');
+ }
+#status{
+position:fixed;
+bottom:10px;
+border:20px #00f;
+margin:10px;
+}
+
+#bubble-background {
+ fill: none;
+ stroke: none;
+ pointer-events: all;
+}
+
+.bubble-node {
+ /* fill: #d1e0f3; */
+ opacity: 0.5;
+}
+
+.bubble-hover {
+ /* fill: #b8c7d9; */
+ opacity: 0.9;
+}
+
+.bubble-selected {
+ /* fill: #a8c8ee;  */
+ fill: #CEE98F;
+ /* stroke: #6081a3; */
+ stroke: #A6BA92;
+ stroke-width: 1.5px;
+}
+
+.active {
+ color: #A6BA92
+}
+
+a.bubble-label {
+ font-family: georgia, "times new roman", times, serif;
+ color: inherit;
+ cursor: pointer;
+ display: block;
+ text-align: center;
+ text-decoration: none;
+ line-height: 1em;
+ position: absolute;
+}
+
+
+text.bubble-label{
+ font: 11px sans-serif;
+ white-space: nowrap;
+ text-align:center;
+ fill:red;
+}
+text.bubble-label-name {
+text-align:center;
+}
+footer p {
+ text-align: center;
+ padding-top:20px;
+ padding-bottom:20px;
+ font: 13px sans-serif;
+}
+#details.pagelist{
+	color: #00f;
+	font-size:25pt;
+	height:lem;
+}
+.label{
+text-align:center;
+text-color:black;
+}

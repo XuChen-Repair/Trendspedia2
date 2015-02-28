@@ -1,0 +1,2 @@
+db.hot.insert({description: "tfwerwerwewerwerew", title: "Demo Title", pageID: "27318", tweetID: "11111111111", url: "http://www.demourl.com", urlMD5: "xxxxx", mentionedCount: 100, images: ['http://www.google.com', 'https://sites.google.com/site/weikangnus/_/rsrc/1393492866190/config/customLogo.gif'], tweetCreatedTime: ISODate("2012-12-19T06:01:17.171Z")})
+
