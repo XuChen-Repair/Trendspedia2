@@ -5,7 +5,7 @@ $(document).ready(function() {
 	});
 		var params = parseURL(document.URL);
 		console.log(window.location.pathname);
-		if(window.location.pathname !== "/home") {
+		if(window.location.pathname == "/home/en/") {
 		var eventsUrl = "../../twitter/getEvents/" + params.params.title.toLowerCase();
 		$("#eventTable").empty();
 		$.get(eventsUrl, function( data ) {
