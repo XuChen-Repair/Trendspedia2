@@ -167,8 +167,7 @@ $(document).ready(function() {
 
 			/*load hot materials*/
 			$.getJSON("../../twitter/hotMaterials?pageID=" + pageID, function(data) {
-				console.log("hot meterials:");
-				console.log(data);
+				console.log("hot meterials === ", data);
 				hotMaterials = data.hotMaterials;
 				while(MaterialCount < materialLoadAmount){
 					if(MaterialCount <= hotMaterials.length - 1){
@@ -468,10 +467,9 @@ function presentMaterialsContent(hotMaterial){
 					"<a href = '"+hotMaterial.url+"'>"+hotMaterial.title+"</a>"+
                                         "<br>"+
                                         "<p>"+hotMaterial.description+"</p>"+
-                                        "<br>"+
 					"<div id = '"+hotMaterial.tweetID+"'>"+
 						imagesHtml+
-					"</div>"+
+					"</div>"+"<br><br>"+
                                    "</dt>");
 	
 }
