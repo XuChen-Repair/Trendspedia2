@@ -32,6 +32,9 @@ def simpleTweetCreation(tweet, user):
 
 def tweetCreation(item, user, pageID):
     time_format = "%a %b %d %H:%M:%S +0000 %Y"
+    relatedUrls = map(lambda url: url["expanded_url"], item["entities"]["urls"]);
+    # Below code results in short URLs but availability at the mercy of twitter
+    # relatedUrls = map(lambda url: url["url"], item["entities"]["urls"]);
     tweet = Tweets(createdAt=datetime.strptime(item["created_at"], time_format),
                   pageID=pageID,
                   id=str(item["id"]),
@@ -41,6 +44,7 @@ def tweetCreation(item, user, pageID):
                   name=user["name"],
                   screenname=user["screen_name"],
                   profileImageUrl=user["profile_image_url"],
+                  urls=json.dumps(relatedUrls),
                   profileBackgroundImageUrl=user["profile_background_image_url"])
 
     return tweet
