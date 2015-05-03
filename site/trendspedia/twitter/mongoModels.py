@@ -101,6 +101,7 @@ class Tweets(Document):
     source = StringField(max_length=1000)
     userID = StringField(max_length=100)
     name = StringField(max_length=100)
+    urls = StringField(max_length=1000)
     screenname = StringField(max_length=100)
     location = StringField(max_length=1000)
     description = StringField(default="")
