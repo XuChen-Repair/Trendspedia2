@@ -15,6 +15,11 @@ from twitter.mongoModels import *
 from datetime import datetime
 import string, time, operator, re, nltk
 
+# Content extraction imports
+import urllib2
+import locale
+import breadability.readable;
+
 # Nice solution found in SO to make a list unique and keep the order
 def uniqueList(seq):
     seen = set()
@@ -32,7 +37,7 @@ def simpleTweetCreation(tweet, user):
 
 def tweetCreation(item, user, pageID):
     time_format = "%a %b %d %H:%M:%S +0000 %Y"
-    relatedUrls = map(lambda url: url["expanded_url"], item["entities"]["urls"]);
+    relatedUrls = map(extractContentFromUrl, item["entities"]["urls"]);
     # Below code results in short URLs but availability at the mercy of twitter
     # relatedUrls = map(lambda url: url["url"], item["entities"]["urls"]);
     tweet = Tweets(createdAt=datetime.strptime(item["created_at"], time_format),
@@ -48,6 +53,25 @@ def tweetCreation(item, user, pageID):
                   profileBackgroundImageUrl=user["profile_background_image_url"])
 
     return tweet
+
+
+def extractContentFromUrl(url):
+    """
+    Accepts a URL dictionary from the Twitter API response and returns
+    a dictionary(url=url, content=<summary of article at url>)
+    """
+    url = url["expanded_url"]
+    req = urllib2.Request(url)
+    res = urllib2.urlopen(req)
+    content = res.read()
+    res.close()
+    document = breadability.readable.Article(content, url=url, return_fragment = True)
+    ret = {}
+    ret["url"] = url;
+    encoding = locale.getpreferredencoding()
+    ret["content"] = document.readable.encode(encoding)
+    print "Received ", url, " for extraction. length = ", len(content), len(ret["content"])
+    return ret
 
 
 def twitterUserCreation(source):
