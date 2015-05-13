@@ -47,8 +47,16 @@ def tweetCreation(item, user, pageID):
                   screenname=user["screen_name"],
                   profileImageUrl=user["profile_image_url"],
                   urls=json.dumps(relatedUrls),
-                  profileBackgroundImageUrl=user["profile_background_image_url"])
-    summarize.delay(tweet.id)
+                  profileBackgroundImageUrl=user["profile_background_image_url"]).save()
+    for relatedUrl in relatedUrls:
+        hot = Hot(
+            pageID=pageID,
+            tweetID=str(item["id"]),
+            url=relatedUrl,
+            mentionedCount=item["retweet_count"],
+            tweetCreatedTime=datetime.strptime(item["created_at"], time_format)
+            ).save()
+        summarize.delay(hot.id)
     return tweet
 
 def twitterUserCreation(source):
