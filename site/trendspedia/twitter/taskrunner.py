@@ -12,7 +12,9 @@ app = Celery('urls')
 @app.task
 def summarize(tweet_id):
   tweet = Tweets.objects(pk=tweet_id).first()
-  map(extractContentFromUrl, json.loads(tweet.urls))
+  urls = json.loads(tweet.urls)
+  map(extractContentFromUrl, urls)
+  tweet.urls = json.dumps(urls)
   tweet.save()
 
 def extractContentFromUrl(url):
