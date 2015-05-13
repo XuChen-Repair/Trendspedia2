@@ -1,26 +1,27 @@
 from __future__ import absolute_import
 from celery import Celery
-from twitter.mongoModels import Tweets
+from twitter.mongoModels import Hot
 
 import json
 import urllib2
 import locale
 import breadability.readable as readable
+from bs4 import BeautifulSoup
 
 app = Celery('urls')
 
 @app.task
-def summarize(tweet_id):
-  tweet = Tweets.objects(pk=tweet_id).first()
-  urls = json.loads(tweet.urls)
-  map(extractContentFromUrl, urls)
-  tweet.urls = json.dumps(urls)
-  tweet.save()
+def summarize(id):
+  print "id=" + str(id)
+  page = Hot.objects(pk=id).first()
+  url = page.url
+  page.title, page.description, page.images = extractContentFromUrl(url)
+  page.save()
 
 def extractContentFromUrl(url):
   """
-  Accepts a string URL and returns
-  a dictionary(url=url, content=<summary of article at url>)
+  Accepts a string URL and returns 3-tuple describing the page
+  (title, description, images[])
   """
   content = ""
   try:
@@ -32,10 +33,15 @@ def extractContentFromUrl(url):
     print "URL ERROR: " + u.reason
   except urllib2.HTTPError as h:
     print "HTTP Error: ", h.code
-  document = readable.Article(content, url=url, return_fragment=True)
-  ret = {}
-  ret["url"] = url;
+  document = readable.Article(content, url=url, return_fragment=False)
   encoding = locale.getpreferredencoding()
-  ret["content"] = document.readable.encode(encoding)
-  print "Extracted " +  url + " |= " + str(len(content)) + " ==> " + str(len(ret["content"]))
-  return ret
+  reduced_content = document.readable.encode(encoding)
+  bigdom = BeautifulSoup(content)
+  dom = BeautifulSoup(reduced_content)
+  title = ""
+  if bigdom.title:
+    title = bigdom.title.string.strip()
+  description = dom.get_text()
+  images = map(lambda img: img.get('src'), dom.find_all('img'))
+  print "Crawled " + url + " (" + title + ")"
+  return title, description, images
