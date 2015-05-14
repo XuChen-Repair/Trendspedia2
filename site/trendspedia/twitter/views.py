@@ -26,7 +26,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from wikipedia.views import JSONResponse
-
+from pymongo import Connection
 from twitter.helper import Helper
 
 # Global variable ??? How to fix
@@ -60,7 +60,7 @@ def on_results(results):
     """
 
     # TODO: Do something with these results on callback
-    print results
+    #print results
 
 # Method is restricted to localhost only.
 def addTask(request, queryType): #TEST-IGNORE
@@ -110,11 +110,11 @@ def search(request, queryType): #TEST-IGNORE
 ##        return search_with_tokens(user.tokens, queryType, params)
 
 def search_with_tokens(tokens, queryType, params):
-    print "params = ", params
+    #print "params = ", params
     #user = UserSocialAuth.objects.filter(user=request.user).get()
     # Set up a new Twython object with the OAuth keys
 
-    pprint(tokens)
+    #pprint(tokens)
     print "app_key = ", settings.TWITTER_CONSUMER_KEY
     print "app_secret = ", settings.TWITTER_CONSUMER_SECRET
     print "oauth_token = ", tokens['oauth_token']
@@ -247,6 +247,7 @@ def get_date(record):
 min_time = pikachu.datetime.max
 max_time = pikachu.datetime.min
 def getEvents(request, topic):
+    return None
     # print "topic = ", topic
     # con = Connection()
     # db = con['cs3281']
@@ -255,7 +256,6 @@ def getEvents(request, topic):
     # for r in col.find({'term':str(topic)}):
     #     events.append(r['events'])
     helper = Helper()
-    from pymongo import Connection
     import codecs, re
 
     con = Connection()
@@ -278,7 +278,6 @@ def getEvents(request, topic):
     for word in wordSet:
         fwp.write( "%s\n" % (word) )      
     fwp.close()
-    from pymongo import Connection
     import datetime
     import codecs, re
     import wiki
@@ -536,7 +535,7 @@ def hotMaterials(request):
             "pageID" : pageID,
             "hotMaterials" : helper.getHotMaterials(pageID),
         }
-        print result
+        #print result
         #return HttpResponse(json.dumps(queryResults), mimetype="application/json")
         return helper.jsonp(request, result)		
 
@@ -591,3 +590,26 @@ def hotImage(request):
 ##    elif request.method == 'DELETE':
 ##        twitter.delete()
 ##        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+#DY
+# tweets from mongoDB
+import pymongo
+def getTweetsfromDB(request):
+    con = Connection()
+    db = con['cs3281']
+    tweetsDB = db['tweets']
+    
+    params = request.GET
+    searchKey = params['title']
+    pageID = params['pageID']
+
+    from bson import json_util
+    DBresults = tweetsDB.find({'pageID': pageID }).limit(100).sort('createdAt', pymongo.DESCENDING)
+
+    resultList = []
+    for DBresult in DBresults:
+        resultList.append(DBresult)
+
+    jsonList = json.dumps(resultList ,default=json_util.default)
+    return HttpResponse(jsonList)

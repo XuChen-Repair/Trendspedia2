@@ -13,6 +13,8 @@ urlpatterns = patterns('twitter.views',
     url(r'^hotMaterials$', 'hotMaterials'),
     #url(r'^hotImage$', 'hotImage'),
     url(r'^getEvents/(?P<topic>.+)/$', 'getEvents'),
+    #DY
+    url(r'^getTweetsfromDB$', 'getTweetsfromDB'),
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)
