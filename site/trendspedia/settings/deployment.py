@@ -1,7 +1,7 @@
 from development import *
 
 #DEBUG = True
-DEBUG = TEMPLATE_DEBUG = True
+DEBUG = TEMPLATE_DEBUG = False
 
 #BROKER_URL = 'amqp://cs3281:cs3281@localhost:5672/cs3281'
 BROKER_URL = 'amqp://guest:guest@localhost:5672/'
