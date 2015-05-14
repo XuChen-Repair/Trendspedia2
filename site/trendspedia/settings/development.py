@@ -23,59 +23,7 @@ TEST_DISCOVER_TOP_LEVEL = os.path.dirname(os.path.dirname(__file__))
 # This setting is optional.
 
 '''
-COVERAGE_CODE_EXCLUDES = getattr(settings, 'COVERAGE_CODE_EXCLUDES',[
-                                    'def __unicode__\(self\):',
-                                    'def get_absolute_url\(self\):',
-                                    'def dummy.*(.*):',
-                                    'from .* import .*', 'import .*',
-                                    'def .*:.*TEST-IGNORE',
-                                    'def __new__.*:',
-                                    'def log.*:',
-                                    'except .*:',
-                                 ])
-
-# Specify a list of regular expressions of paths to exclude from
-# coverage analysis.
-# Note these paths are ignored by the module introspection tool and take
-# precedence over any package/module settings such as:
-# TODO: THE SETTING FOR MODULES
-# Use this to exclude subdirectories like ``r'.svn'``, for example.
-# This setting is optional.
-COVERAGE_PATH_EXCLUDES = getattr(settings, 'COVERAGE_PATH_EXCLUDES',
-                                 [r'.svn'])
-
-# Specify a list of additional module paths to include
-# in the coverage analysis. By default, only modules within installed
-# apps are reported. If you have utility modules outside of the app
-# structure, you can include them here.
-# Note this list is *NOT* regular expression, so you have to be explicit,
-# such as 'myproject.utils', and not 'utils$'.
-# This setting is optional.
-COVERAGE_ADDITIONAL_MODULES = getattr(settings, 'COVERAGE_ADDITIONAL_MODULES', [])
-
-# Specify a list of regular expressions of module paths to exclude
-# from the coverage analysis. Examples are ``'tests$'`` and ``'urls$'``.
-# This setting is optional.
-COVERAGE_MODULE_EXCLUDES = getattr(settings, 'COVERAGE_MODULE_EXCLUDES',
-                                   ['__init__','djcelery','rest_framework',
-                                    '^django','test.*','tokens_producer$',
-                                    'tasks$',])
-
-
-# Specify the directory where you would like the coverage report to create
-# the HTML files.
-# You'll need to make sure this directory exists and is writable by the
-# user account running the test.
-# You should probably set this one explicitly in your own settings file.
-
-#COVERAGE_REPORT_HTML_OUTPUT_DIR = '/my_home/test_html'
-COVERAGE_REPORT_HTML_OUTPUT_DIR = getattr(settings,
-                                          'COVERAGE_REPORT_HTML_OUTPUT_DIR',
-                                          None)
-
-# True => html reports by 55minutes
-# False => html reports by coverage.py
-COVERAGE_CUSTOM_REPORTS = getattr(settings, 'COVERAGE_CUSTOM_REPORTS', True)'''
+'''
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -206,13 +154,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 SECRET_KEY = '9lpn$p%+c#+pemgab*0(pp&amp;!p9m7_w%7+^9)rdd&amp;pfs*ok33rw'
 
-#SOCIAL_AUTH_ENABlED_BACKENDS = ('twitter',)
-#SOCIAL_AUTH_DEFAULT_USERNAME = "cs3281"
-
-# Token for OAuth services
-TWITTER_CONSUMER_KEY = 'OwoIIQC79NloXYuYxE8u5zvVW'
-TWITTER_CONSUMER_SECRET = 'htCAZqD3d9aLhH0hxSLoexaHdSJBmWaQ1i5ulZBj9Pj7Byl82C'
-
 # Login with Django
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/home'
@@ -292,6 +233,7 @@ TEMPLATE_DEBUG = DEBUG
 
 #BROKER_URL = 'amqp://cs3281:cs3281@localhost:5672/cs3281'
 BROKER_URL = 'amqp://guest:guest@localhost:5672/'
+# CELERY_RESULT_BACKEND = 'amqp://'
 
 #BROKER_HOST = "localhost"
 #BROKER_PORT = 5672
@@ -333,4 +275,4 @@ TWITTER_CONSUMER_SECRET = 'htCAZqD3d9aLhH0hxSLoexaHdSJBmWaQ1i5ulZBj9Pj7Byl82C'
 WEIBO_CLIENT_KEY = '3531138456'
 WEIBO_CLIENT_SECRET = 'a7337d1e716d64e72cd5bc7445c96206'
 
-CELERY_IMPORTS = ('celery_queue.tasks',)
+CELERY_IMPORTS = ('celery_queue.tasks', )

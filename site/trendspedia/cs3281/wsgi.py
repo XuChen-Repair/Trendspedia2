@@ -17,11 +17,14 @@ import os
 import site
 import sys
 
-SITE_DIR = '/var/www-django/cs3281/site'
+# Where manage.py is
+SITE_DIR = '/Users/shubhamgoyal/NUS/SeSaMe/Trendspedia/site/trendspedia'
 site.addsitedir(SITE_DIR)
 sys.path.append(SITE_DIR)
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings.development")
+DJANGO_SETTINGS_MODULE = "settings.deployment"
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", DJANGO_SETTINGS_MODULE)
+print "Following Settings at", DJANGO_SETTINGS_MODULE
 
 # This application object is used by any WSGI server configured to use this
 # file. This includes Django's development server, if the WSGI_APPLICATION
@@ -29,9 +32,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings.development")
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
-# Apply WSGI middleware here.
-# from helloworld.wsgi import HelloWorldApplication
-# application = HelloWorldApplication(application)
+# Tokens Producer runs as a separate thread
 from celery_queue import tokens_producer
 import threading
 t = threading.Thread(target=tokens_producer.run_producer)
