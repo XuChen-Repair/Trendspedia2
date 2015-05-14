@@ -26,7 +26,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from wikipedia.views import JSONResponse
-
+from pymongo import Connection
 from twitter.helper import Helper
 
 # Global variable ??? How to fix
@@ -247,6 +247,7 @@ def get_date(record):
 min_time = pikachu.datetime.max
 max_time = pikachu.datetime.min
 def getEvents(request, topic):
+    return None
     # print "topic = ", topic
     # con = Connection()
     # db = con['cs3281']
@@ -255,7 +256,6 @@ def getEvents(request, topic):
     # for r in col.find({'term':str(topic)}):
     #     events.append(r['events'])
     helper = Helper()
-    from pymongo import Connection
     import codecs, re
 
     con = Connection()
@@ -278,7 +278,6 @@ def getEvents(request, topic):
     for word in wordSet:
         fwp.write( "%s\n" % (word) )      
     fwp.close()
-    from pymongo import Connection
     import datetime
     import codecs, re
     import wiki
@@ -591,3 +590,22 @@ def hotImage(request):
 ##    elif request.method == 'DELETE':
 ##        twitter.delete()
 ##        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+#DY
+# tweets from DB
+def existing(request):
+    con = Connection()
+    db = con['cs3281']
+    tweetsDB = db['tweets']
+    
+    params = request.GET
+    searchKey = params['title']
+
+    from bson import json_util    
+    DBresults = tweetsDB.find({'text':{'$regex': searchKey }})
+    resultList = []
+    for DBresult in DBresults:
+        resultList.append(DBresult)
+    jsonList = json.dumps(resultList ,default=json_util.default)
+    return HttpResponse(jsonList)

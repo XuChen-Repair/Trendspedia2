@@ -2,6 +2,7 @@
  * @author SONG QIYUE
  */
 var hotCount = 0;
+
 $(document).ready(function() {
 	$('.carousel').carousel({
 		interval : 4000
@@ -54,6 +55,44 @@ $(document).ready(function() {
 	var newTweets = 0;
 	var AllTweets = new Array();
 
+	//DY	
+	var getTweets = function(query) {
+		$.getJSON('../../twitter/existing?title=' + query, function(data) {
+			if (data.length > 0) {
+				AllTweets = data.reverse();
+				var tweetsfromDB = [];
+
+				for (var i = 0; i < AllTweets.length; i++) {
+					var tweetfromDB = {};		
+					var splitter = AllTweets[i].text.split(" ");
+					var output = "";
+					for (var j = 0; j < splitter.length; j++) {
+						if (startsWith(splitter[j], "http://")) {
+							output += ("<a href='" + splitter[j] + "'>" + splitter[j] + "</a> ");
+						} else {
+							output += (splitter[j] + " ");
+						}
+					}
+					tweetfromDB.content = output;
+					tweetfromDB.image_url = AllTweets[i].profileImageUrl;
+					tweetfromDB.createTime = AllTweets[i].createdAt.$date;				
+					var localTime = new Date(tweetfromDB.createTime);
+					var correctTime = new Date(localTime.getTime() + 28800 * 1000);
+					tweetfromDB.createTime = correctTime.toString().replace("GMT+0800 (SGT)", "");
+					tweetfromDB.name = AllTweets[i].name;
+					tweetfromDB.id = AllTweets[i]._id;
+
+					tweetsfromDB.push(tweetfromDB);
+				}	
+				
+				for (var i = 0; i < tweetsfromDB.length; i++) {
+					$('#scroller').prepend('<li>' + '<img src = "' + tweetsfromDB[i].image_url + '">&nbsp;' + '<span>' + tweetsfromDB[i].name + ': </span>' + '<p style = "font-weight:100;font-size:12px;">' + tweetsfromDB[i].content + '</p>' + '<div style = "font-size:14px;">' + tweetsfromDB[i].createTime + '</div>' + '</li>');
+				}
+			} else {
+				getTwitter(query);
+			}
+		});
+	}
 	var getTwitter = function(query) {
 		$.getJSON('../../twitter/api/search/?q=' + query + '&pageID=' + pageID + "&result_type=recent&count=100", function(data) {
 			var tweets = [];
@@ -191,7 +230,10 @@ $(document).ready(function() {
 				$('#wikiArticle').removeClass('span12').addClass('span9');
 				$('#tweets').show();
 				//$('#head-nav').show();
-				getTwitter(query);
+				
+				//DY
+				getTweets(query);
+
 				//warning: testing
 				initBubbles(pageTitle);
 				setInterval(function() {
