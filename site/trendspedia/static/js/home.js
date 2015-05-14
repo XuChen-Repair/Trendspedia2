@@ -57,7 +57,7 @@ $(document).ready(function() {
 
 	//DY	
 	var getTweets = function(query) {
-		$.getJSON('../../twitter/existing?title=' + query, function(data) {
+		$.getJSON('../../twitter/getTweetsfromDB?title=' + query + '&pageID=' + pageID, function(data) {
 			if (data.length > 0) {
 				AllTweets = data.reverse();
 				var tweetsfromDB = [];

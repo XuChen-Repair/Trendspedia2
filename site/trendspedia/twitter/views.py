@@ -60,7 +60,7 @@ def on_results(results):
     """
 
     # TODO: Do something with these results on callback
-    print results
+    #print results
 
 # Method is restricted to localhost only.
 def addTask(request, queryType): #TEST-IGNORE
@@ -110,11 +110,11 @@ def search(request, queryType): #TEST-IGNORE
 ##        return search_with_tokens(user.tokens, queryType, params)
 
 def search_with_tokens(tokens, queryType, params):
-    print "params = ", params
+    #print "params = ", params
     #user = UserSocialAuth.objects.filter(user=request.user).get()
     # Set up a new Twython object with the OAuth keys
 
-    pprint(tokens)
+    #pprint(tokens)
     print "app_key = ", settings.TWITTER_CONSUMER_KEY
     print "app_secret = ", settings.TWITTER_CONSUMER_SECRET
     print "oauth_token = ", tokens['oauth_token']
@@ -535,7 +535,7 @@ def hotMaterials(request):
             "pageID" : pageID,
             "hotMaterials" : helper.getHotMaterials(pageID),
         }
-        print result
+        #print result
         #return HttpResponse(json.dumps(queryResults), mimetype="application/json")
         return helper.jsonp(request, result)		
 
@@ -593,19 +593,23 @@ def hotImage(request):
 
 
 #DY
-# tweets from DB
-def existing(request):
+# tweets from mongoDB
+import pymongo
+def getTweetsfromDB(request):
     con = Connection()
     db = con['cs3281']
     tweetsDB = db['tweets']
     
     params = request.GET
     searchKey = params['title']
+    pageID = params['pageID']
 
-    from bson import json_util    
-    DBresults = tweetsDB.find({'text':{'$regex': searchKey }})
+    from bson import json_util
+    DBresults = tweetsDB.find({'pageID': pageID }).limit(100).sort('createdAt', pymongo.DESCENDING)
+
     resultList = []
     for DBresult in DBresults:
         resultList.append(DBresult)
+
     jsonList = json.dumps(resultList ,default=json_util.default)
     return HttpResponse(jsonList)
