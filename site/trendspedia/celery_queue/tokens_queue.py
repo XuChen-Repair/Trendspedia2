@@ -111,19 +111,18 @@ class TokensQueue:
             if (user.provider == "twitter"):
                 #DY
                 from django.conf import settings
-                import requests                
-
-                print "tokens_queue.py refreshPQ begin"
-                url = u'https://api.twitter.com/1.1/account/verify_credentials.json'
+                import requests
                 from requests_oauthlib import OAuth1
-                oauth = OAuth1(unicode(settings.TWITTER_CONSUMER_KEY), unicode(settings.TWITTER_CONSUMER_SECRET),
-                        unicode(user.tokens['oauth_token']), unicode(user.tokens['oauth_token_secret']), signature_type='query')
+                
+                url = u'https://api.twitter.com/1.1/account/verify_credentials.json'                
+                oauth = OAuth1(unicode(settings.TWITTER_CONSUMER_KEY), unicode(settings.TWITTER_CONSUMER_SECRET), unicode(user.tokens['oauth_token']), unicode(user.tokens['oauth_token_secret']), signature_type='query')
                 response = requests.get(url, auth=oauth)
                 if (response.status_code == 401):
                     #remove invalid tokens
                     user.delete()
-                
-                self.tokens.append(user.tokens)
+                else:
+                    self.tokens.append(user.tokens)
+                    print "token appended, ", user
 
         self.initiatePQ(self.tokens)
         self.logInfo("Refreshed Tokens Queue.")
