@@ -53,11 +53,12 @@ class SimpleTweet(EmbeddedDocument):
     pk = StringField(default="")
 
 #
-class Topic(Document):
+class Topics(Document):
     priority = IntField(default=0)
     lastSearchedAt = DateTimeField(default=datetime.datetime.now)
-    pageID = StringField(required=True)
-    query = StringField(required=True, unique=True)
+    pageID = StringField(required=True, unique=True)
+    query = StringField(required=True)
+    sinceID = StringField()
 
 class WikiArticle(Document):
     meta = {
