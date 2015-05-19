@@ -40,12 +40,12 @@ class TokensQueue:
             } 
         # total remaining uses per queryType => bucketLimits * tokens
         self.remainingUses = {}
+        self.rateWindow = 15 * 60 # 15 minutes
         self.threadLock = threading.Lock()
         self.logger = logger
         self.logInfo("Tokens Queue Service started.")
         # self.validateTokens()
         self.refreshPQ()
-        self.rateWindow = 15 * 60 # 15 minutes
 
         # Spin off a timer thread to refresh the tokens queue on
         # the self.rateWindow time interval.
@@ -127,14 +127,18 @@ class TokensQueue:
 
         self.initiatePQ(self.tokens)
         self.logInfo("Refreshed Tokens Queue.")
-        self.nextRefreshAt = (int)time.time() + self.rateWindow
+        self.nextRefreshAt = (int)(time.time()) + self.rateWindow
         self.threadLock.release()
 
     # Function returns minimum time to wait between uses such that
     # the service won't be starved for tokens due to Twitter's API limits
+    # If there are no tokens left, advise 30 seconds before retry
     def getMinTimeBetweenUses(self, queryType):
         remainingTime = self.nextRefreshAt - (int)(time.time())
-        return (remainingTime * 1.0 / self.remainingUses)
+        if self.remainingUses.get(queryType) != 0:
+            return (remainingTime * 1.0 / self.remainingUses[queryType])
+        else:
+            return 30
 
     # Returns a token for QUERYTYPE. None is returned if there's no tokens
     # available.
@@ -145,7 +149,7 @@ class TokensQueue:
             tokenPair = self.pq[queryType].get()
             self.logInfo("Retrieved Token {0}, remaining uses: {1} from {2} bucket.".format(tokenPair[1], tokenPair[0], queryType))
             tokenPair = (tokenPair[0] + 1, tokenPair[1])
-            self.remainingUses = self.remainingUses - 1
+            self.remainingUses[queryType] = self.remainingUses[queryType] - 1
             # -1 is means unknown rate limit, an equality to 0
             # is used here to allow tokens to be reused for
             # streaming indefinitely. 

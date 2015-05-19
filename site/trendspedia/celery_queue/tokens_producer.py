@@ -77,7 +77,11 @@ def producer(logger):
         channel.queue_declare(queue=body)
         channel.basic_publish(exchange='',
                           routing_key=body,
-                          body=json.dumps(tq.retrieveToken(body)))
+                          body=json.dumps([
+                            tq.retrieveToken(body),
+                            tq.getMinTimeBetweenUses(body)
+                            ])
+                          )
         connection.close()
 
     channel.basic_consume(callback,
