@@ -28,7 +28,6 @@ from rest_framework.response import Response
 from wikipedia.views import JSONResponse
 from pymongo import Connection
 from twitter.helper import Helper
-
 # Global variable ??? How to fix
 oauth = None
 
@@ -592,15 +591,34 @@ def hotImage(request):
 
 
 #DY
-# tweets from mongoDB
 import pymongo
+# tweets from mongoDB
 def getTweetsfromDB(request):
     con = Connection()
     db = con['cs3281']
-    tweetsDB = db['tweets']
-    
     params = request.GET
-    searchKey = params['title']
+    print "params = "
+    print params
+    # Insert query into Topic DB if does not exist, if exist then
+    # update priority to 1
+    topic = db['topics'].find_one({"pageID": params['pageID']})
+    if topic is None:
+        topic = {}
+        print params
+        topic['query'] = params['query']
+        topic['pageID'] = params['pageID']
+        topic['priority'] = 1
+        db['topics'].insert(topic)
+    else:
+        db['topics'].update({"pageID": params['pageID']},
+            {"$set":{
+                "priority": 1,
+                "sinceID": params.get('since_id')
+            }
+        })
+
+    tweetsDB = db['tweets']
+    searchKey = params['query']
     pageID = params['pageID']
 
     from bson import json_util
