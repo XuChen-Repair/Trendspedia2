@@ -57,7 +57,7 @@ $(document).ready(function() {
 
 	//DY	
 	var getTweets = function(query) {
-		$.getJSON('../../twitter/getTweetsfromDB?title=' + query + '&pageID=' + pageID, function(data) {
+		$.getJSON('../../twitter/getTweetsfromDB?query=' + query + '&pageID=' + pageID, function(data) {
 			if (data.length > 0) {
 				AllTweets = data.reverse();
 				var tweetsfromDB = [];
@@ -89,7 +89,8 @@ $(document).ready(function() {
 					$('#scroller').prepend('<li>' + '<img src = "' + tweetsfromDB[i].image_url + '">&nbsp;' + '<span>' + tweetsfromDB[i].name + ': </span>' + '<p style = "font-weight:100;font-size:12px;">' + tweetsfromDB[i].content + '</p>' + '<div style = "font-size:14px;">' + tweetsfromDB[i].createTime + '</div>' + '</li>');
 				}
 			} else {
-				getTwitter(query);
+				//If no tweets then call again in a short while so the crawler has time to index
+				setTimeout(getTweets, 10);
 			}
 		});
 	}
@@ -135,15 +136,17 @@ $(document).ready(function() {
 			}
 		});
 	}
+
 	var getFollowingTwitter = function(query) {
-		$.getJSON('../../twitter/api/search/?q=' + query + '&pageID=' + pageID + "&result_type=recent&count=20&since_id=" + since_id, function(data) {
+		$.getJSON('../../twitter/getTweetsfromDB?query=' + query + '&pageID=' + pageID + "&result_type=recent&count=20&since_id=" + since_id, function(data) {
 			var tweets = [];
 			console.log("following batch of RAW new tweets:");
 			console.log(data);
 			var proceed = true;
-			$.each(data.statuses, function(index, element) {			
-				if(element.id_str == AllTweets[AllTweets.length - 1].id){
+			$.each(data, function(index, element) {
+				if(element._id == AllTweets[AllTweets.length - 1].id){
 					proceed = false;
+					console.log("Ignoring all tweets from " + element.text)
 				}
 				if(proceed){
 					tweets[index] = {};
@@ -161,20 +164,58 @@ $(document).ready(function() {
 						}
 					}
 					tweets[index].content = output;
-					tweets[index].image_url = element.user.profile_image_url;
-					tweets[index].createTime = element.created_at.replace('+0000', '');
+					tweets[index].image_url = element.profileImageUrl;
+					tweets[index].createTime = element.createdAt.$date;
 					var localTime = new Date(tweets[index].createTime);
 					var correctTime = new Date(localTime.getTime() + 28800 * 1000);
 					tweets[index].createTime = correctTime.toString().replace("GMT+0800 (SGT)", "");
-					tweets[index].name = element.user.name;
-					tweets[index].id = element.id_str;
+					tweets[index].name = element.name;
+					tweets[index].id = element._id;
 					}
 			});
 			/*render new tweets into the tweets list*/
 			loadMore(tweets);
 		});
 	}
-
+	// var getFollowingTwitter = function(query) {
+	// 	$.getJSON('../../twitter/getTweetsfromDB?query=' + query + '&pageID=' + pageID + "&result_type=recent&count=20&since_id=" + since_id, function(data) {
+	// 		var tweets = [];
+	// 		console.log("following batch of RAW new tweets:");
+	// 		console.log(data);
+	// 		var proceed = true;
+	// 		$.each(data.statuses, function(index, element) {
+	// 			if(element.id_str == AllTweets[AllTweets.length - 1].id){
+	// 				proceed = false;
+	// 			}
+	// 			if(proceed){
+	// 				tweets[index] = {};
+	// 				if (index == "0") {
+	// 					since_id = element.id;
+	// 				}
+	// 				// Convert link to anchor
+	// 				var splitter = element.text.split(" ");
+	// 				var output = "";
+	// 				for (var j = 0; j < splitter.length; j++) {
+	// 					if (startsWith(splitter[j], "http://")) {
+	// 						output += ("<a href='" + splitter[j] + "'>" + splitter[j] + "</a> ");
+	// 					} else {
+	// 						output += (splitter[j] + " ");
+	// 					}
+	// 				}
+	// 				tweets[index].content = output;
+	// 				tweets[index].image_url = element.user.profile_image_url;
+	// 				tweets[index].createTime = element.created_at.replace('+0000', '');
+	// 				var localTime = new Date(tweets[index].createTime);
+	// 				var correctTime = new Date(localTime.getTime() + 28800 * 1000);
+	// 				tweets[index].createTime = correctTime.toString().replace("GMT+0800 (SGT)", "");
+	// 				tweets[index].name = element.user.name;
+	// 				tweets[index].id = element.id_str;
+	// 				}
+	// 		});
+	// 		/*render new tweets into the tweets list*/
+	// 		loadMore(tweets);
+	// 	});
+	// }
 	// Dump the content of wiki pages using the URL
 	var loadCounter = 0;
 	var loadWiki = function(finalAPI) {
