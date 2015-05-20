@@ -92,7 +92,6 @@ def search(request, queryType): #TEST-IGNORE
         # Receive tokens generated
         channel.queue_declare(queue=queryType)
         method_frame, header_frame, token = channel.basic_get(queue=queryType)
-        
         connection.close()
 
         if token == None:
@@ -122,7 +121,7 @@ def search_with_tokens(tokens, queryType, params):
     t = Twython(app_key=settings.TWITTER_CONSUMER_KEY,
         app_secret=settings.TWITTER_CONSUMER_SECRET,
         oauth_token=tokens['oauth_token'],
-        oauth_token_secret=tokens['oauth_token_secret'])
+        oauth_token_secret=tokens['oauth_token_secret'])    
     
     # Obtain Twitter results using user's OAuth key
     if queryType == "search":
