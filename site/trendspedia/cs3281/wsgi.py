@@ -38,3 +38,8 @@ import threading
 t = threading.Thread(target=tokens_producer.run_producer)
 t.daemon = True
 t.start()
+
+from twitter import crawler
+t = threading.Thread(target=crawler.start)
+t.daemon = True
+t.start()

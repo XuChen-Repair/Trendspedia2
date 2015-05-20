@@ -52,6 +52,14 @@ class SimpleTweet(EmbeddedDocument):
     user = ReferenceField(TwitterUser)
     pk = StringField(default="")
 
+#
+class Topics(Document):
+    priority = IntField(default=0)
+    lastSearchedAt = DateTimeField(default=datetime.datetime.now)
+    pageID = StringField(required=True, unique=True)
+    query = StringField(required=True)
+    sinceID = StringField()
+
 class WikiArticle(Document):
     meta = {
         'collection': 'wiki_article',
