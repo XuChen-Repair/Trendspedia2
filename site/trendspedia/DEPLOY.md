@@ -42,7 +42,7 @@ rabbitmq-server -detached
 
 Make sure there is at least one celery worker scraping URLs in tweets.
 ``
-python manage.py celery -A twitter.taskrunner worker
+python manage.py celery worker -A twitter.taskrunner --autoscale=16,3 -f log/twitter.taskrunner.log -D
 ``
 
 ## Gunicorn
@@ -52,7 +52,6 @@ used for development.
 
 To run it, use  
 `gunicorn cs3281.wsgi:application --bind 127.0.0.1:8001 -D`  
-
 The `-D` runs it in daemonized mode. Adjust other options as required.
 The port is important because this port is where nginx will send
 requests to.
