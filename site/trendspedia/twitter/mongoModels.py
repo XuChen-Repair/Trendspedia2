@@ -137,4 +137,5 @@ class Hot(Document):
     mentionedCount = IntField(default=1)
     images = ListField()
     tweetCreatedTime = DateTimeField()
+    crawled = BooleanField(default=False)
 

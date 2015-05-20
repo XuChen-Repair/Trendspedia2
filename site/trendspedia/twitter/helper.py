@@ -1,5 +1,6 @@
 # Standard library import
 import json
+from bson import json_util
 import time
 from collections import defaultdict
 import operator
@@ -87,24 +88,22 @@ class Helper(object):
                 data = '%s(%s);' % (request.REQUEST['callback'], data)
                 return HttpResponse(str(data), "text/javascript")
         except:
-            data = json.dumps(result)
+            data = json.dumps(result, default=json_util.default)
         return HttpResponse(str(data), "application/json")
 
     def getHotMaterials(self, pageID):
         entries = Hot.objects(pageID=pageID).order_by('-mentionedCount').limit(500)
-
-        #sortedURL = sorted(appearances.iteritems(), key=operator.itemgetter(1), reverse=True)
-        sortedURL = [{"title":str(entry.title),
-		     "description":str(entry.description),	
-		     "url": str(entry.url),
-                     "count": str(entry.mentionedCount),
-                     "tweetID": str(entry.tweetID),
-                     "tweetCreatedTime": str(entry.tweetCreatedTime),
-                     "images": (entry.images)
-                     } 
-                     for entry in entries
-                    ]
-        return sortedURL
+        # TODO LOWPRIO: Is it necessary to convert like this at all?
+        sortedUrls = [{
+            "title":entry.title,
+            "description":entry.description,
+            "url": entry.url,
+            "count": entry.mentionedCount,
+            "tweetID": entry.tweetID,
+            "tweetCreatedTime": entry.tweetCreatedTime,
+            "images": entry.images
+        } for entry in entries ]
+        return sortedUrls
 
     '''
     def getHotImage(self, pageID):

@@ -12,10 +12,9 @@ app = Celery('urls')
 
 @app.task
 def summarize(id):
-  print "id=" + str(id)
   page = Hot.objects(pk=id).first()
   url = page.url
-  page.title, page.description, page.images = extractContentFromUrl(url)
+  page.crawled, page.title, page.description, page.images = extractContentFromUrl(url)
   page.save()
 
 def extractContentFromUrl(url):
@@ -24,13 +23,15 @@ def extractContentFromUrl(url):
   (title, description, images[])
   """
   content = ""
+  crawled = False
   try:
     req = urllib2.Request(url)
     res = urllib2.urlopen(req)
     content = res.read()
+    crawled = True
     res.close()
   except urllib2.URLError as u:
-    print "URL ERROR: " + u.reason
+    print "URL ERROR: ", u.reason
   except urllib2.HTTPError as h:
     print "HTTP Error: ", h.code
   document = readable.Article(content, url=url, return_fragment=False)
@@ -44,4 +45,4 @@ def extractContentFromUrl(url):
   description = dom.get_text()
   images = map(lambda img: img.get('src'), dom.find_all('img'))
   print "Crawled " + url + " (" + title + ")"
-  return title, description, images
+  return crawled, title, description, images
