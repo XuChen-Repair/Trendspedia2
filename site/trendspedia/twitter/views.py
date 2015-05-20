@@ -245,7 +245,6 @@ def get_date(record):
 min_time = pikachu.datetime.max
 max_time = pikachu.datetime.min
 def getEvents(request, topic):
-    return None
     # print "topic = ", topic
     # con = Connection()
     # db = con['cs3281']
