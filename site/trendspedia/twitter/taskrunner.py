@@ -15,7 +15,7 @@ def summarize(id):
   page = Hot.objects(pk=id).first()
   url = page.url
   page.crawled, page.url, page.title, page.description, page.images = extractContentFromUrl(url)
-  duplicate = Hot.objects(pk__ne=id, url=page.url).first()
+  duplicate = Hot.objects(pk__ne=id, url=page.url, crawled=True).first()
   if duplicate is None:
     # No duplicate URLs, save the page
     page.save()
