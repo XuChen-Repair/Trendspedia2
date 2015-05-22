@@ -282,17 +282,20 @@ function callGenerateTagCloud(pageID){
 	//showIndicator();
 	$.ajax({
 		type:"GET",
-		url:server+wikiTagcloudURL+"?pageid="+pageID+"&callback=?", 
-		dataType:"jsonp",
-		corssDomain:true,		
+		//url:server+wikiTagcloudURL+"?pageid="+pageID+"&callback=?", 
+		//dataType:"jsonp",
+		//corssDomain:true,		
+		url:server+wikiTagcloudURL+"?pageid="+pageID, 
+		dataType:"json",
+		corssDomain:false,		
 		success:function(data) {
-			console.log("tag Cloud:");
-			console.log(data);
+			console.log("Tag Cloud ===", data);
 	 		generateTagCloud(data, null, 0);
 			},
 		error:function(err,err2){
-			console.log(err);
-			console.log(err2);			
+			console.log("Tag Cloud error: ", err);
+			console.log("Tag Cloud error2: ", err2);
+			//console.log(err2);			
 			}	
 		});
 }
@@ -303,7 +306,7 @@ function generateTagCloud(allData, box, update){
 //	if(box.id==1){
 		TG.allData = allData;
 		TG.regionNum = 1;
-		console.log("allData:", allData);
+		//console.log("allData:", allData);
 		input = allData.result;
 	// }
 	// else if(box.id==2){
