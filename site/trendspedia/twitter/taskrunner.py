@@ -14,8 +14,14 @@ app = Celery('urls')
 def summarize(id):
   page = Hot.objects(pk=id).first()
   url = page.url
-  page.crawled, page.title, page.description, page.images = extractContentFromUrl(url)
-  page.save()
+  page.crawled, page.url, page.title, page.description, page.images = extractContentFromUrl(url)
+  duplicate = Hot.objects(pk__ne=id, url=page.url, crawled=True).first()
+  if duplicate is None:
+    # No duplicate URLs, save the page
+    page.save()
+  else:
+    # Duplicate URLs exist in the DB, delete the page
+    page.delete()
 
 def extractContentFromUrl(url):
   """
@@ -44,5 +50,5 @@ def extractContentFromUrl(url):
     title = bigdom.title.string.strip()
   description = dom.get_text()
   images = map(lambda img: img.get('src'), dom.find_all('img'))
-  print "Crawled " + url + " (" + title + ")"
-  return crawled, title, description, images
+  print "Crawled " + res.geturl() + " (" + title + ")"
+  return crawled, res.geturl(), title, description, images
