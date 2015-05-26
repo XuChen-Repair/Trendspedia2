@@ -23,16 +23,9 @@ def summarize(id):
   url = page.url
   page.crawled, summ_time, page.url, page.title, page.description, page.images = extractContentFromUrl(url)
   crawl_time = time()
-  duplicate = Hot.objects(pk__ne=id, url=page.url, crawled=True)
-  if len(duplicate) == 0 and page.crawled == True:
-    # No duplicate URLs and no errors in parsing, save the page
+  if page.crawled == True:
     page.save()
-  elif len(duplicate) != 0:
-    # Delete all duplicate URLs and insert page (updated version)
-    duplicate.delete()
-    page.save()
-  elif page.crawled == False:
-    # Errors in parsing (or exceptions etc..)
+  else:
     page.delete()
   duplicate_time = time()
   total_time = duplicate_time - start_time

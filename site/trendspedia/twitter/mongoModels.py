@@ -122,10 +122,9 @@ class Hot(Document):
     meta = { 
         'collection': 'hot',
         'allow_inheritance': False,
+        'index_drop_dups': True,
         'indexes': [
-            {'fields': ['pageID']},
-            {'fields': ['urlMD5']},
-            {'fields': ['tweetCreatedTime']},
+            {'fields': ['pageID', 'url']},
         ]   
     }
     description = StringField()
