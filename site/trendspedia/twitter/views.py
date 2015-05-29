@@ -613,6 +613,7 @@ def getTweetsfromDB(request):
             topic['query'] = params['query']
             topic['pageID'] = params['pageID']
             topic['priority'] = 1
+            topic['createdAt'] = datetime.datetime.now()
             db['topics'].insert(topic)
         else:
             db['topics'].update({"pageID": params['pageID']},
