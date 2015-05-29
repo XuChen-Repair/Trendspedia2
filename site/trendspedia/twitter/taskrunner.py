@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from celery import Celery
 from twitter.mongoModels import Hot
+from mongoengine.errors import NotUniqueError
 
 import json
 import urllib2, socket, sys
@@ -23,9 +24,15 @@ def summarize(id):
   url = page.url
   page.crawled, summ_time, page.url, page.title, page.description, page.images = extractContentFromUrl(url)
   crawl_time = time()
-  if page.crawled == True:
-    page.save()
-  else:
+  try:
+    if page.crawled == True:
+      page.save()
+    else:
+      page.delete()
+  except NotUniqueError:
+    orig = Hot.objects(url=page.url, pageID=page.pageID).first()
+    orig.mentionedCount = orig.mentionedCount + 1
+    orig.save()
     page.delete()
   duplicate_time = time()
   total_time = duplicate_time - start_time
@@ -62,15 +69,16 @@ def extractContentFromUrl(url):
   except:
     print url, sys.exc_info()[0]
   reduced_content = ""
-  crawled = False
   try:
     start_time = time()
-    document = readable.Article(content, url=url, return_fragment=False)
-    encoding = locale.getpreferredencoding()
-    reduced_content = document.readable.encode(encoding)
-    crawled = True
+    if crawled:
+      document = readable.Article(content, url=url, return_fragment=False)
+      encoding = locale.getpreferredencoding()
+      reduced_content = document.readable.encode(encoding)
+      crawled = True
     summ_time = time() - start_time
   except:
+    crawled = False
     print url, sys.exc_info()[0]
   title = ""
   description = ""
@@ -78,10 +86,11 @@ def extractContentFromUrl(url):
   if reduced_content == '<div id="readabilityBody" class="parsing-error"/>':
     crawled = False
   else:
-    bigdom = BeautifulSoup(content)
-    dom = BeautifulSoup(reduced_content)
-    if bigdom.title and bigdom.title.string:
-      title = bigdom.title.string.strip()
-    description = dom.get_text()
-    images = map(lambda img: img.get('src'), dom.find_all('img'))
+    if crawled:
+      bigdom = BeautifulSoup(content)
+      dom = BeautifulSoup(reduced_content)
+      if bigdom.title and bigdom.title.string:
+        title = bigdom.title.string.strip()
+      description = dom.get_text()
+      images = map(lambda img: img.get('src'), dom.find_all('img'))
   return crawled, summ_time, url, title, description, images
