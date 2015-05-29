@@ -46,6 +46,7 @@ def tweetCreation(item, user, pageID):
                   userID=str(user["id"]),
                   name=user["name"],
                   screenname=user["screen_name"],
+                  location=item["coordinates"],
                   profileImageUrl=user["profile_image_url"],
                   urls=json.dumps(relatedUrls),
                   profileBackgroundImageUrl=user["profile_background_image_url"]).save()

@@ -14,7 +14,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 
 #new change
-import datetime as pikachu
+import datetime
+
 
 from social_auth.models import UserSocialAuth # Social Authentication of popular services
 import requests # Requests library, simplifying http request
@@ -28,6 +29,8 @@ from rest_framework.response import Response
 from wikipedia.views import JSONResponse
 from pymongo import Connection
 from twitter.helper import Helper
+from bson import json_util
+
 # Global variable ??? How to fix
 oauth = None
 
@@ -240,10 +243,10 @@ def home(request, lang):
     return HttpResponse(t.render(c))
 
 def get_date(record):
-    return pikachu.datetime.strptime(record[0], "%Y-%m-%d")
+    return datetime.datetime.strptime(record[0], "%Y-%m-%d")
 
-min_time = pikachu.datetime.max
-max_time = pikachu.datetime.min
+min_time = datetime.datetime.max
+max_time = datetime.datetime.min
 def getEvents(request, topic):
     # print "topic = ", topic
     # con = Connection()
@@ -408,7 +411,7 @@ def getEvents(request, topic):
                 #for word, num in freqdist.items()[:N]:  # N:number of words for each event
                 for word, num in freqdist.most_common(N):
                     word_list.append( ( word, num) )
-                actual_date = pikachu.date(2014, 10, 15) + pikachu.timedelta(days=day)
+                actual_date = datetime.date(2014, 10, 15) + datetime.timedelta(days=day)
                 actual_date_string = actual_date.strftime("%Y-%m-%d")
                 result.append( (actual_date_string, weight, word_list) )
                 
@@ -595,33 +598,49 @@ import pymongo
 def getTweetsfromDB(request):
     con = Connection()
     db = con['cs3281']
+    tweetsDB = db['tweets']
     params = request.GET
     print "params = "
     print params
-    # Insert query into Topic DB if does not exist, if exist then
-    # update priority to 1
-    topic = db['topics'].find_one({"pageID": params['pageID']})
-    if topic is None:
-        topic = {}
-        print params
-        topic['query'] = params['query']
-        topic['pageID'] = params['pageID']
-        topic['priority'] = 1
-        db['topics'].insert(topic)
-    else:
-        db['topics'].update({"pageID": params['pageID']},
-            {"$set":{
-                "priority": 1,
-                "sinceID": params.get('since_id')
+
+    if params.get('pageID') and params.get('query'):
+        # Insert query into Topic DB if does not exist, if exist then
+        # update priority to 1
+        topic = db['topics'].find_one({"pageID": params['pageID']})
+        if topic is None:
+            topic = {}
+            print params
+            topic['query'] = params['query']
+            topic['pageID'] = params['pageID']
+            topic['priority'] = 1
+            db['topics'].insert(topic)
+        else:
+            db['topics'].update({"pageID": params['pageID']},
+                {"$set":{
+                    "priority": 1,
+                    "sinceID": params.get('since_id')
+                }
+            })
+    query = {}
+    if params.get('pageID'):
+        query['pageID'] = params.get(pageID)
+    if params.get('sw') and params.get('ne'):
+        sw = map(float, params.get('sw').split(','))
+        ne = map(float, params.get('ne').split(','))
+        query['location'] = {
+            "$geoWithin": {
+                "$box": [sw, ne]
             }
-        })
+        }
+    if params.get('before') or params.get('after'):
+        dateFmt = '%Y-%m-%dT%H:%M:%S.%fZ'
+        query['createdAt'] = {}
+        if params.get('before'):
+            query['createdAt']['$lte'] = datetime.datetime.strptime(params.get('before'),dateFmt)
+        if params.get('after'):
+            query['createdAt']['$gt'] = datetime.datetime.strptime(params.get('after'),dateFmt)
 
-    tweetsDB = db['tweets']
-    searchKey = params['query']
-    pageID = params['pageID']
-
-    from bson import json_util
-    DBresults = tweetsDB.find({'pageID': pageID }).limit(100).sort('createdAt', pymongo.DESCENDING)
+    DBresults = tweetsDB.find(query).limit(100).sort('createdAt', pymongo.DESCENDING)
 
     resultList = []
     for DBresult in DBresults:
