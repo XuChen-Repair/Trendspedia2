@@ -111,7 +111,7 @@ class Tweets(Document):
     name = StringField(max_length=100)
     urls = StringField(default="")
     screenname = StringField(max_length=100)
-    location = StringField(max_length=1000)
+    location = PointField()
     description = StringField(default="")
     profileImageUrl = StringField(max_length=1000)
     profileBackgroundImageUrl = StringField(default="")
