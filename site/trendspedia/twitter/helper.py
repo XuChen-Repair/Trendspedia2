@@ -54,7 +54,7 @@ def tweetCreation(item, user, pageID):
             pageID=pageID,
             tweetID=str(item["id"]),
             url=relatedUrl,
-            mentionedCount=item["retweet_count"],
+            mentionedCount=0,
             tweetCreatedTime=datetime.strptime(item["created_at"], time_format)
             ).save()
         summarize.delay(hot.id)
