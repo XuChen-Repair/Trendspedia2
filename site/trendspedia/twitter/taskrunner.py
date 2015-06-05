@@ -45,7 +45,8 @@ def summarize(id):
   crawl_time = crawl_time - summ_time
   retrieve_time = retrieve_time - start_time
   if page.crawled:
-    print ":>>{0}, {1}, {2}, {3}, {4}".format(total_time, retrieve_time, crawl_time, summ_time, duplicate_time)
+    # print ":>>{0}, {1}, {2}, {3}, {4}".format(total_time, retrieve_time, crawl_time, summ_time, duplicate_time)
+    print ":>> {0}".format(total_time)
 
 def extractContentFromUrl(url):
   """
