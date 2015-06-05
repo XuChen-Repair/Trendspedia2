@@ -22,7 +22,12 @@ def summarize(id):
   if page is None:
     return
   url = page.url
-  page.crawled, summ_time, page.url, page.title, page.description, page.images = extractContentFromUrl(url)
+  try:
+    page.crawled, summ_time, page.url, page.title, page.description, page.images = extractContentFromUrl(url)
+  except:
+    page.delete()
+    print url, sys.exc_info()[0]
+    return
   crawl_time = time()
   try:
     if page.crawled:
@@ -57,7 +62,7 @@ def extractContentFromUrl(url):
   crawled = False
   try:
     req = urllib2.Request(url)
-    res = urllib2.urlopen(req)
+    res = urllib2.urlopen(req, timeout=12)
     content = res.read()
     url = res.geturl()
     crawled = True
@@ -71,6 +76,8 @@ def extractContentFromUrl(url):
     print 'HTTPError:\t\t' + url + ' --> ' + h.code
   except BadStatusLine:
     print 'BadStatusLine:\t' + url
+  except socket.timeout, e:
+    print 'Timeout: ' + url
   except:
     print url, sys.exc_info()[0]
   reduced_content = ""
@@ -81,7 +88,6 @@ def extractContentFromUrl(url):
       document = readable.Article(content, url=url, return_fragment=False)
       encoding = locale.getpreferredencoding()
       reduced_content = document.readable.encode(encoding)
-      crawled = True
     summ_time = time() - start_time
   except:
     crawled = False
