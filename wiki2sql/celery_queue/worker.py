@@ -7,9 +7,9 @@ import urllib, urllib2
 from urllib2 import Request, urlopen, URLError
 import json
 
-app = Celery('sample', backend='amqp', broker='amqp://')
+app = Celery('autosync')
 
-@app.task
+@app.task(queue = 'autosync')
 def consumer(id, title):
     print title
     # make query to wikipedia by title
