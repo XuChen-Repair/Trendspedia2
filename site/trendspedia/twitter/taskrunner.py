@@ -14,7 +14,7 @@ from time import time
 
 app = Celery('urls')
 
-@app.task
+@app.task(queue='urls')
 def summarize(id):
   start_time = time()
   page = Hot.objects(pk=id).first()
@@ -25,15 +25,19 @@ def summarize(id):
   page.crawled, summ_time, page.url, page.title, page.description, page.images = extractContentFromUrl(url)
   crawl_time = time()
   try:
-    if page.crawled == True:
+    if page.crawled:
       page.save()
     else:
       page.delete()
   except NotUniqueError:
     orig = Hot.objects(url=page.url, pageID=page.pageID).first()
-    orig.mentionedCount = orig.mentionedCount + 1
-    orig.save()
+    if orig is not None:
+      orig.mentionedCount = orig.mentionedCount + 1
+      orig.save()
     page.delete()
+  except:
+    page.delete()
+    print url, sys.exc_info()[0]
   duplicate_time = time()
   total_time = duplicate_time - start_time
   duplicate_time = duplicate_time - crawl_time
@@ -54,8 +58,8 @@ def extractContentFromUrl(url):
     req = urllib2.Request(url)
     res = urllib2.urlopen(req)
     content = res.read()
-    crawled = True
     url = res.geturl()
+    crawled = True
     res.close()
   except urllib2.URLError as u:
     if isinstance(u.reason, basestring):
@@ -69,6 +73,7 @@ def extractContentFromUrl(url):
   except:
     print url, sys.exc_info()[0]
   reduced_content = ""
+  summ_time = 0
   try:
     start_time = time()
     if crawled:
