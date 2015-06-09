@@ -10,10 +10,9 @@ import json
 app = Celery('autosync')
 
 @app.task(queue = 'autosync')
-def consumer(change_id, title):
-    #print title
+def consumer(change_id, title):    
     # make query to wikipedia by title
-    queryRequestUrlForPage = "http://en.wikipedia.org/w/api.php?action=query&format=json&titles=" + urllib2.quote(title.encode("utf8")) + "&prop=redirects|revisions"
+    queryRequestUrlForPage = "http://en.wikipedia.org/w/api.php?action=query&format=json&titles=" + urllib2.quote(title) + "&prop=redirects|revisions"
     queryResponseForPage = json.load(urllib2.urlopen(queryRequestUrlForPage))
     d = {}
     d['page'] = queryResponseForPage['query']['pages'][queryResponseForPage['query']['pages'].keys()[0]]

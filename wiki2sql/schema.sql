@@ -107,3 +107,5 @@ CREATE TABLE /*_*/pagelinks (
   pl_id int unsigned NOT NULL default 0,
   pl_title varchar(255) binary NOT NULL default ''
 );
+
+-- test duplicate: select pl_from_title, pl_id, count(*) from pagelinks group by pl_from_title, pl_id having count(*) > 1;

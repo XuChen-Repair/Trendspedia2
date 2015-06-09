@@ -308,6 +308,7 @@ def updatePagelinks(page_id, page_title):
         # delete old links
         sqlDeleteExisting = "DELETE FROM pagelinks WHERE pl_from_id = %s"
         cursor.execute(sqlDeleteExisting, (str(page_id), ))
+        cnx.commit()
 
         # insert new links
         if links: 
@@ -317,10 +318,11 @@ def updatePagelinks(page_id, page_title):
                 
                 sqlCheckExistenceOfPage = "SELECT page_id FROM page WHERE page_title = %s"
                 cursor.execute(sqlCheckExistenceOfPage, (link_title, ))
-                if cursor.fetchone() and page_title != link_title:
-                    link_id = cursor.fetchone()[0]
+                row = cursor.fetchone()
+                if (row is not None) and (page_title != link_title):
+                    link_id = row[0]
                     sqlCheckExistenceOfLink = "SELECT * FROM pagelinks WHERE pl_from_id = %s AND pl_id = %s"
-                    cursor.execute(sqlCheckExistence, (str(page_id), str(link_id)))
+                    cursor.execute(sqlCheckExistenceOfLink, (str(page_id), str(link_id)))
                     if not cursor.fetchone():
                         add_link = ("INSERT INTO pagelinks "
                             "(pl_from_id, pl_from_title, pl_namespace, pl_id, pl_title) "
@@ -332,6 +334,8 @@ def updatePagelinks(page_id, page_title):
                             link_title)
                         cursor.execute(add_link, data_text)
         cnx.commit()
+
+        print page_title + ": Done."
 
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
