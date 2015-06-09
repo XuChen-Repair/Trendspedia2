@@ -1,4 +1,4 @@
--- Wikidb Schema. A simplified version from Wikipedia SQL DB schema
+-- Wikidb Schema. A simplified and modified version from Wikipedia SQL DB schema
 -- Wikipedia SQL DB schema: http://svn.wikimedia.org/viewvc/mediawiki/trunk/phase3/maintenance/tables.sql?view=markup
 --
 -- Core of the wiki: each page has an entry here which identifies
@@ -92,3 +92,18 @@ CREATE TABLE /*_*/text (
   text_revision int unsigned NOT NULL REFERENCES revision(rev_id) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) MAX_ROWS=10000000 AVG_ROW_LENGTH=10240;
 -- In case tables are created as MyISAM, use row hints for MySQL <5.0 to avoid 4GB limit
+
+CREATE TABLE /*_*/pagelinks (
+  -- Key to the page_id of the page containing the link.
+  pl_from_id int unsigned NOT NULL default 0,
+
+  pl_from_title varchar(255) binary NOT NULL,
+
+  -- Key to page_namespace/page_title of the target page.
+  -- The target page may or may not exist, and due to renames
+  -- and deletions may refer to different page records as time
+  -- goes by.
+  pl_namespace int NOT NULL default 0,
+  pl_id int unsigned NOT NULL default 0,
+  pl_title varchar(255) binary NOT NULL default ''
+);

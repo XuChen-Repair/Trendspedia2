@@ -1,6 +1,6 @@
 from celery import Celery
+from sql import update, updatePagelinks
 import mysql.connector
-from sql import update
 from mysql.connector import (connection)
 from mysql.connector import errorcode
 import urllib, urllib2
@@ -10,8 +10,8 @@ import json
 app = Celery('autosync')
 
 @app.task(queue = 'autosync')
-def consumer(id, title):
-    print title
+def consumer(change_id, title):
+    #print title
     # make query to wikipedia by title
     queryRequestUrlForPage = "http://en.wikipedia.org/w/api.php?action=query&format=json&titles=" + urllib2.quote(title.encode("utf8")) + "&prop=redirects|revisions"
     queryResponseForPage = json.load(urllib2.urlopen(queryRequestUrlForPage))
@@ -30,6 +30,8 @@ def consumer(id, title):
         d['revision'] = queryResponseForRevision['query']['pages'][queryResponseForRevision['query']['pages'].keys()[0]]['revisions'][0]
         # update DB
         update(d)
+        page_id = d['page']['pageid']
+        updatePagelinks(page_id, title)
 
     # delete row from waiting list
     try:
@@ -37,7 +39,7 @@ def consumer(id, title):
         cursor = cnx.cursor()
         try:
             sqlDelete = "DELETE FROM ChangeTable WHERE change_id = %s"
-            cursor.execute(sqlDelete, (str(id), ))
+            cursor.execute(sqlDelete, (str(change_id), ))
             cnx.commit()
         except mysql.connector.Error as e:
             print e
@@ -52,3 +54,17 @@ def consumer(id, title):
             print(err)
     else:
         cnx.close()
+
+#def updateLinks(page_id, page_title):
+    #################################
+    # get links list from wikipedia, pass it to updateLinksInDB in sql.py
+    # wikipedia api limit: link returning max 500
+    # queryRequestUrlForLinks = "http://en.wikipedia.org/w/api.php?action=query&format=json&prop=linkshere&lhlimit=5&lhnamespace=0&titles=" + urllib2.quote(page_title.encode("utf8"))
+    # queryResponseForLinks = json.load(urllib2.urlopen(queryRequestUrlForLinks))
+    # temp = queryResponseForLinks['query']['pages'][queryResponseForLinks['query']['pages'].keys()[0]]
+    # if 'linkshere' in temp.keys():
+    #     links = temp['linkshere']
+    #     updateLinksInDB(page_id, page_title, links)
+    # else:
+    #     updateLinksInDB(page_id, page_title, None)
+    #################################

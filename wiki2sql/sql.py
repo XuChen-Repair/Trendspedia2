@@ -67,8 +67,7 @@ def insert(dict):
                     minor,
                     rev_sha1)
                 # Insert new revision
-                cursor.execute(add_revision, data_revision)
-                
+                cursor.execute(add_revision, data_revision)                
                 cnx.commit()
             except mysql.connector.Error as e:
                 print e
