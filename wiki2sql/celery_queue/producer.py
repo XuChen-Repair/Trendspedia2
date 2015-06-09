@@ -13,7 +13,7 @@ def producer():
         results = cursor.fetchall()
         for result in results:
             change_id = result[0]
-            change_page_title = result[1]
+            change_page_title = result[1].encode("utf8")
             try:
                 sqlCheck = "SELECT * FROM ChangeTable WHERE flag = %s AND change_id = %s"
                 cursor.execute(sqlCheck, (1, str(change_id)))

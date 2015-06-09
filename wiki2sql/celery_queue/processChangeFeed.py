@@ -107,8 +107,6 @@ def processChangeFeedOnce():
     else:
         cnx.close()
 
-        
-
 def sync():
     while True:
         processChangeFeedOnce()
