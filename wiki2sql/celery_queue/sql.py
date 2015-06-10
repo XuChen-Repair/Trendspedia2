@@ -307,9 +307,10 @@ def updatePagelinks(page_id, page_title):
                         links = None
 
         # delete old links
-        sqlDeleteExisting = "DELETE FROM pagelinks WHERE pl_from_id = %s"
-        cursor.execute(sqlDeleteExisting, (str(page_id), ))
-        cnx.commit()
+        # uncomment it for auto sync
+        #sqlDeleteExisting = "DELETE FROM pagelinks WHERE pl_from_id = %s"
+        #cursor.execute(sqlDeleteExisting, (str(page_id), ))
+        #cnx.commit()
 
         # insert new links
         if links: 
