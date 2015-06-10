@@ -19,7 +19,8 @@ def update(dict):
             try:
                 sqlq = "SELECT * FROM page WHERE page_id = %s" 
                 cursor.execute(sqlq, (str(pageid), ))
-                if cursor.fetchone():
+                row = cursor.fetchone()
+                if row is not None:
                     # check whether revision already exist
                     revid = dict['revision']['revid']
                     sqlq2 = "SELECT * FROM revision WHERE rev_id = %s"

@@ -1,4 +1,4 @@
-CREATE TABLE ChangeTable (
+CREATE TABLE IF NOT EXISTS ChangeTable (
   -- Unique identifier number.
   change_id int unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
 
@@ -17,7 +17,7 @@ CREATE TABLE ChangeTable (
 -- http://stackoverflow.com/questions/1008287/illegal-mix-of-collations-mysql-error
 -- to test duplicate entry: select change_page_title, count(*) from ChangeTable group by change_page_title having count(*) > 1;
 
-CREATE TABLE Log (
+CREATE TABLE IF NOT EXISTS Log (
   -- Unique identifier number.
   log_id int unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
 
