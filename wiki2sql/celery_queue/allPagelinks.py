@@ -1,4 +1,4 @@
-from sql import updatePagelinks
+from workerForPagelinks import consumer
 import mysql.connector
 from mysql.connector import (connection)
 from mysql.connector import errorcode
@@ -13,11 +13,8 @@ try:
     for row in cursor:
         page_id = row[0]
         page_title = row[1].decode("utf8")
-        print page_title + ": Start..."
-        updatePagelinks(page_id, page_title)
-        f=open('lastPageID_allPagelinks.txt','w')
-        f.write(str(page_id))
         
+        consumer.delay(page_id, page_title)
 
 except mysql.connector.Error as err:
     if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:

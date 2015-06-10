@@ -336,8 +336,6 @@ def updatePagelinks(page_id, page_title):
                         cursor.execute(add_link, data_text)
         cnx.commit()
 
-        print page_title + ": Done."
-
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
             print("Something is wrong with your user name or password")
