@@ -272,70 +272,77 @@ def queueChanges(timestamp, title):
     else:
         cnx.close()
 
+# text_text from table text is in wiki markup language.
+# process page links from text_text
 def updatePagelinks(page_id, page_title):
     try:
         cnx = connection.MySQLConnection(user='root', password='', host='localhost', database='wikidb')
         cursor = cnx.cursor()
 
-        page_namespace = None
-        
         # get pagelinks
         sqlSelectPage = "SELECT page_namespace, page_revision FROM page WHERE page_id = %s"
         cursor.execute(sqlSelectPage, (page_id, ))
         row = cursor.fetchone()
-        if not row:
-            links = None
-        else:
+        pagelinksExistFlag = False
+
+        if row:
             rev_id = row[1]
             page_namespace = row[0]
             sqlSelectPage = "SELECT rev_text_id FROM revision WHERE rev_id = %s"
             cursor.execute(sqlSelectPage, (rev_id, ))
             row = cursor.fetchone()
-            if not row:
-                links = None
-            else:
+            if row:                
                 text_id = row[0]
                 sqlSelectText = "SELECT text_text FROM text WHERE text_id = %s"
                 cursor.execute(sqlSelectText, (text_id, ))
                 row = cursor.fetchone()
-                if not row:
-                    links = None
-                else:
+                if row:                    
                     text = row[0]
+                    # get all links in [[]]
                     links = re.findall(r"(?<=\[\[)(.*?)(?=\]\])", text)
-                    if not links:
-                        links = None
+                    if links:
+                        pagelinksExistFlag = True
 
-        # delete old links
-        # uncomment it for auto sync
-        #sqlDeleteExisting = "DELETE FROM pagelinks WHERE pl_from_id = %s"
-        #cursor.execute(sqlDeleteExisting, (str(page_id), ))
-        #cnx.commit()
+        # get all old pagelinks
+        sqlSelectExisting = "SELECT pl_title FROM pagelinks WHERE pl_from_id = %s"
+        cursor.execute(sqlSelectExisting, (str(page_id), ))
+        existingLinks = cursor.fetchall()
 
         # insert new links
-        if links: 
+        if pagelinksExistFlag: 
             for link in links:
                 link_titles = link.decode("utf8")
+                # for link in the format of [[XX|YY]], get XX.
                 link_title = re.findall(r"^[^\|]+", link_titles)[0]
-                
-                sqlCheckExistenceOfPage = "SELECT page_id FROM page WHERE page_title = %s"
-                cursor.execute(sqlCheckExistenceOfPage, (link_title, ))
-                row = cursor.fetchone()
-                if (row is not None) and (page_title != link_title):
-                    link_id = row[0]
-                    sqlCheckExistenceOfLink = "SELECT * FROM pagelinks WHERE pl_from_id = %s AND pl_id = %s"
-                    cursor.execute(sqlCheckExistenceOfLink, (str(page_id), str(link_id)))
-                    if not cursor.fetchone():
+
+                flag = False
+                if page_title != link_title:
+                    sqlCheckExistenceOfPage = "SELECT page_id FROM page WHERE page_title = %s"
+                    cursor.execute(sqlCheckExistenceOfPage, (link_title, ))
+                    row = cursor.fetchone()                    
+                    if row is not None:
+                        link_id = row[0]
+                        flag = True
+                if flag:
+                    if link_title in existingLinks:
+                        existingLinks.remove(link_title)
+                    else:                        
                         add_link = ("INSERT INTO pagelinks "
                             "(pl_from_id, pl_from_title, pl_namespace, pl_id, pl_title) "
                             "VALUES (%s, %s, %s, %s, %s);")
-                        data_text = (page_id,
+                        data_link = (page_id,
                             page_title,
                             page_namespace,
                             link_id,
                             link_title)
-                        cursor.execute(add_link, data_text)
+                        cursor.execute(add_link, data_link)
+
+                for titleTORemove in existingLinks:
+                    sqlDeleteLink = "DELETE FROM pagelinks WHERE pl_from_id = %s AND pl_title = %s"
+                    cursor.execute(sqlDeleteLink, (page_id, titleTORemove))
+
         cnx.commit()
+        print page_title + ": Done."
 
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:

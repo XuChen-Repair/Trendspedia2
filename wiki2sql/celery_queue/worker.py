@@ -36,14 +36,10 @@ def consumer(change_id, title):
     try:
         cnx = connection.MySQLConnection(user='root', password='', host='localhost', database='wikidb')
         cursor = cnx.cursor()
-        try:
-            sqlDelete = "DELETE FROM ChangeTable WHERE change_id = %s"
-            cursor.execute(sqlDelete, (str(change_id), ))
-            cnx.commit()
-        except mysql.connector.Error as e:
-            print e
-            cnx.rollback()
-    
+        sqlDelete = "DELETE FROM ChangeTable WHERE change_id = %s"
+        cursor.execute(sqlDelete, (str(change_id), ))
+        cnx.commit()
+  
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
             print("Something is wrong with your user name or password")
