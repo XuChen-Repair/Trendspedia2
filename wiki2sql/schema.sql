@@ -108,4 +108,4 @@ CREATE TABLE IF NOT EXISTS/*_*/pagelinks (
   pl_title varchar(255) binary NOT NULL default ''
 );
 
--- test duplicate: select pl_from_title, pl_id, count(*) from pagelinks group by pl_from_title, pl_id having count(*) > 1;
+-- test duplicate: select pl_from_id, pl_id, count(*) from pagelinks group by pl_from_id, pl_id having count(*) > 1;
