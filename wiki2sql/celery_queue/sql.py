@@ -296,7 +296,7 @@ def updatePagelinks(page_id, page_title):
                 sqlSelectText = "SELECT text_text FROM text WHERE text_id = %s"
                 cursor.execute(sqlSelectText, (text_id, ))
                 row = cursor.fetchone()
-                if row:                    
+                if row:
                     text = row[0]
                     # get all links in [[]]
                     links = re.findall(r"(?<=\[\[)(.*?)(?=\]\])", text)

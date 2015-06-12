@@ -8,12 +8,11 @@ try:
     cursor = cnx.cursor()
 
     lastPageID = open('lastPageID_allPagelinks.txt').read()
-    sqlSelectPage = "SELECT page_id, page_title FROM page WHERE page_id > %s;"
-    cursor.execute(sqlSelectPage, (lastPageID, ))
+    sqlSelectPage = "SELECT page_id, page_title FROM page WHERE page_id > %s AND page_id < %s;"
+    cursor.execute(sqlSelectPage, (lastPageID, 20000))
     for row in cursor:
         page_id = row[0]
         page_title = row[1].decode("utf8")
-        
         consumer.delay(page_id, page_title)
 
 except mysql.connector.Error as err:
@@ -25,3 +24,4 @@ except mysql.connector.Error as err:
         print(err)
 else:
     cnx.close()
+    
