@@ -14,6 +14,7 @@ try:
         page_id = row[0]
         page_title = row[1].decode("utf8")
         consumer.delay(page_id, page_title)
+        print page_title + ": Done."
 
 except mysql.connector.Error as err:
     if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:

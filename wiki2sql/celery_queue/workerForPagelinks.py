@@ -9,11 +9,10 @@ import json
 import datetime
 import re
 
-app = Celery('currentPagelinks')
+app = Celery('allCurrentPagelinks')
 
-@app.task(queue = 'currentPagelinks')
+@app.task(queue = 'allCurrentPagelinks')
 def consumer(page_id, page_title):
     updatePagelinks(page_id, page_title)
-    print page_title + " Done."
     f=open('lastPageID_allPagelinks.txt','w')
     f.write(str(page_id))
