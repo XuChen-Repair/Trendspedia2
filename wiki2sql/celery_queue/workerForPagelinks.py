@@ -9,9 +9,9 @@ import json
 import datetime
 import re
 
-app = Celery('allPagelinks')
+app = Celery('currentPagelinks')
 
-@app.task(queue = 'allPagelinks')
+@app.task(queue = 'currentPagelinks')
 def consumer(page_id, page_title):
     updatePagelinks(page_id, page_title)
     print page_title + " Done."
