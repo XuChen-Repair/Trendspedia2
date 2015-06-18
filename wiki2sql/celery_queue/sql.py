@@ -307,7 +307,13 @@ def updatePagelinks(page_id, page_title):
         sqlSelectExisting = "SELECT pl_title FROM pagelinks WHERE pl_from_id = %s"
         cursor.execute(sqlSelectExisting, (str(page_id), ))
         existingLinks = cursor.fetchall()
+        def convert(link):
+            link = list(link)
+            link = link[0].decode('utf-8')
+            return link
+        existingLinks = map(convert, existingLinks)
 
+        added_titles = []
         # insert new links
         if pagelinksExistFlag: 
             for link in links:
@@ -326,6 +332,8 @@ def updatePagelinks(page_id, page_title):
                 if flag:
                     if link_title in existingLinks:
                         existingLinks.remove(link_title)
+                    elif link_title in added_titles:
+                        pass
                     else:                        
                         add_link = ("INSERT INTO pagelinks "
                             "(pl_from_id, pl_from_title, pl_namespace, pl_id, pl_title) "
@@ -336,12 +344,14 @@ def updatePagelinks(page_id, page_title):
                             link_id,
                             link_title)
                         cursor.execute(add_link, data_link)
+                        cnx.commit()
+                        added_titles.append(link_title)
 
                 for titleTORemove in existingLinks:
                     sqlDeleteLink = "DELETE FROM pagelinks WHERE pl_from_id = %s AND pl_title = %s"
                     cursor.execute(sqlDeleteLink, (page_id, titleTORemove))
+                    cnx.commit()
 
-        cnx.commit()
         print page_title + ": Done."
 
     except mysql.connector.Error as err:
