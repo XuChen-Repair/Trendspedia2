@@ -57,6 +57,7 @@ $(document).ready(function() {
 
 	//DY	
 	var getTweets = function(query) {
+		console.log("getTweets " + query)
 		$.getJSON('../../twitter/getTweetsfromDB?query=' + query + '&pageID=' + pageID, function(data) {
 			if (data.length > 0) {
 				AllTweets = data.reverse();
@@ -90,7 +91,9 @@ $(document).ready(function() {
 				}
 			} else {
 				//If no tweets then call again in a short while so the crawler has time to index
-				setTimeout(getTweets, 10);
+				setTimeout(function(){
+					getTweets(query);
+				}, 10000);
 			}
 		});
 	}
@@ -138,6 +141,7 @@ $(document).ready(function() {
 	}
 
 	var getFollowingTwitter = function(query) {
+		console.log("getFollowingTwitter " + query);
 		$.getJSON('../../twitter/getTweetsfromDB?query=' + query + '&pageID=' + pageID + "&result_type=recent&count=20&since_id=" + since_id, function(data) {
 			var tweets = [];
 			console.log("following batch of RAW new tweets:");
