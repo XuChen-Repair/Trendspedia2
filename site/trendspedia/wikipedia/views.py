@@ -190,7 +190,8 @@ def getSearchResult(request, lang):
             set.append({
                 'text' : item.find("text").text,
                 'description' : item.find("description").text,
-                'url' : item.find("url").text.replace(mw,"/home/"+lang+"/?title=",1)
+                'url' : "/home/"+lang+"/?title=" + item.find("url").text.split('/')[-1]
+                # 'url' : item.find("url").text.replace(mw,"/home/"+lang+"/?title=",1)
             })
         status = 'OK'
         data = {
