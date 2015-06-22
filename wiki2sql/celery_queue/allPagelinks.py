@@ -7,9 +7,9 @@ try:
     cnx = connection.MySQLConnection(user='root', password='', host='localhost', database='wikidb')
     cursor = cnx.cursor()
 
-    lastPageID = open('lastPageID_allPagelinks.txt').read()
+    #lastPageID = open('lastPageID_allPagelinks.txt').read()
     sqlSelectPage = "SELECT page_id, page_title FROM page WHERE page_id > %s AND page_id < %s;"
-    cursor.execute(sqlSelectPage, (lastPageID, 20000))
+    cursor.execute(sqlSelectPage, (19999, 30000))
     for row in cursor:
         page_id = row[0]
         page_title = row[1].decode("utf8")
