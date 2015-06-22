@@ -624,7 +624,7 @@ def getTweetsfromDB(request):
             })
     query = {}
     if params.get('pageID'):
-        query['pageID'] = params.get(pageID)
+        query['pageID'] = params.get('pageID')
     if params.get('sw') and params.get('ne'):
         sw = map(float, params.get('sw').split(','))
         ne = map(float, params.get('ne').split(','))
