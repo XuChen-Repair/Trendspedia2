@@ -27,4 +27,6 @@ urlpatterns = patterns('',
     url(r'^home$', 'twitter.views.home', {'lang' : 'en'}),
     url(r'^home/(\w{2})/$', 'twitter.views.home'),
     url(r'^logout/$', 'twitter.views.logout_view'),
+
+    url(r'^vis/', include('vis.urls'))
 )
