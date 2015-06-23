@@ -4,7 +4,7 @@
 -- Core of the wiki: each page has an entry here which identifies
 -- it by title and contains some essential metadata.
 --
-CREATE TABLE /*_*/page (
+CREATE TABLE IF NOT EXISTS /*_*/page (
   -- Unique identifier number. The page_id will be preserved across
   -- edits and rename operations, but not deletions and recreations.
   page_id int unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -30,7 +30,7 @@ CREATE TABLE /*_*/page (
 -- This stores metadata about the revision, and a reference
 -- to the text storage backend.
 --
-CREATE TABLE /*_*/revision (
+CREATE TABLE IF NOT EXISTS /*_*/revision (
   -- Unique ID to identify each revision
   rev_id int unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
 
@@ -73,7 +73,7 @@ CREATE TABLE /*_*/revision (
 -- table into the 'text' table to minimize unnecessary churning
 -- and downtime. If upgrading, the other fields will be left unused.
 --
-CREATE TABLE /*_*/text (
+CREATE TABLE IF NOT EXISTS /*_*/text (
   -- Unique text storage key number.
   -- Note that the 'oldid' parameter used in URLs does *not*
   -- refer to this number anymore, but to rev_id.
@@ -93,7 +93,7 @@ CREATE TABLE /*_*/text (
 ) MAX_ROWS=10000000 AVG_ROW_LENGTH=10240;
 -- In case tables are created as MyISAM, use row hints for MySQL <5.0 to avoid 4GB limit
 
-CREATE TABLE /*_*/pagelinks (
+CREATE TABLE IF NOT EXISTS/*_*/pagelinks (
   -- Key to the page_id of the page containing the link.
   pl_from_id int unsigned NOT NULL default 0,
 
@@ -108,4 +108,4 @@ CREATE TABLE /*_*/pagelinks (
   pl_title varchar(255) binary NOT NULL default ''
 );
 
--- test duplicate: select pl_from_title, pl_id, count(*) from pagelinks group by pl_from_title, pl_id having count(*) > 1;
+-- test duplicate: select pl_from_id, pl_id, count(*) from pagelinks group by pl_from_id, pl_id having count(*) > 1;
