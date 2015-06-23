@@ -1,20 +1,22 @@
-from workerForPagelinks import consumer
 import mysql.connector
 from mysql.connector import (connection)
 from mysql.connector import errorcode
 
-def html(page_title):
+def html(page_id):
     try:
         cnx = connection.MySQLConnection(user='root', password='', host='localhost', database='wikidb')
         cursor = cnx.cursor()
 
         flag = False
-        sqlSelectPage = "SELECT page_namespace, page_revision FROM page WHERE page_title = %s"
-        cursor.execute(sqlSelectPage, (page_title, ))
-        row = cursor.fetchone()        
+        sqlSelectPage = "SELECT page_namespace, page_revision, page_title FROM page WHERE page_id = %s"
+        cursor.execute(sqlSelectPage, (page_id, ))
+        row = cursor.fetchone()
+        page_title = None
+        text = None
         if row:
             rev_id = row[1]
             page_namespace = row[0]
+            page_title = row[2]
             sqlSelectPage = "SELECT rev_text_id FROM revision WHERE rev_id = %s"
             cursor.execute(sqlSelectPage, (rev_id, ))
             row = cursor.fetchone()
@@ -61,14 +63,7 @@ def html(page_title):
             # ?>
             # """
             #print code
-
-            code = """<?php
-                include('test.php');
-                echo test("Hello");
-            ?>
-            """
-
-            res = php(code)
+            res = parse(text, page_title)
             return res.encode('utf8')
 
     except mysql.connector.Error as err:
@@ -82,10 +77,10 @@ def html(page_title):
         cnx.close()
 
 # shell execute PHP
-def php(code):
+def php(text, title):
     import subprocess
     # open process
-    p = subprocess.Popen(['test.php'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+    p = subprocess.Popen(['php', 'Server.php', text, title], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     # read output
     o = p.communicate(code)[0]
     # kill process
@@ -94,3 +89,6 @@ def php(code):
     except:
         pass
     return o
+
+if __name__ == "__main__":
+    html(27318)
