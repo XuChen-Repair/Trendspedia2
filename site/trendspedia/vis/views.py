@@ -34,7 +34,7 @@ def getAllPLs(request):
         cnx.close()
     return HttpResponse(json.dumps(pagelinks))
 
-def dynamicData(request, format):
-    t = loader.get_template('dynamicData.html') 
+def selectNodes(request, format):
+    t = loader.get_template('selectNodes.html') 
     c = RequestContext(request, {})
     return HttpResponse(t.render(c))

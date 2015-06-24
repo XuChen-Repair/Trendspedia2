@@ -367,6 +367,16 @@ $(document).ready(function() {
 			});
 		}
 	}
+
+	//DY
+	var showGraph = function(pageID, pageTitle) {
+		/*console.log("showGraph");
+		console.log(pageID + "   " + pageTitle);*/
+		// call function initializing the graph (in vis helper.js)
+		showGraph_draw(pageID, pageTitle);
+
+	}
+
 	//loading the page
 	loadWiki(finalAPI);
 
@@ -410,6 +420,7 @@ $(document).ready(function() {
 		$('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
+		$("#graphpage").hide();
 		return false;
 	});
 
@@ -419,6 +430,7 @@ $(document).ready(function() {
 		$('#wikipage').show();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
+		$("#graphpage").hide();
 		getRelatedWikiResult(query);
 		return false;
 	});
@@ -429,24 +441,38 @@ $(document).ready(function() {
 		$('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
+		$("#graphpage").hide();
 		return false;
 	});
 
 	$("#bubble").click(function(){
 		$('#hotpage').hide();
-                $('#summarypage').hide();
-                $('#wikipage').hide();
+        $('#summarypage').hide();
+        $('#wikipage').hide();
 		$('#bubblepage').show();
 		$('#eventpage').hide();
+		$("#graphpage").hide();
 		return false;
 	});
 
 	$("#event").click(function(){
 		$('#hotpage').hide();
-                $('#summarypage').hide();
-                $('#wikipage').hide();
+        $('#summarypage').hide();
+        $('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').show();
+		$("#graphpage").hide();
+		return false;
+	});
+
+	$("#graph").click(function(){
+		$('#hotpage').hide();
+        $('#summarypage').hide();
+        $('#wikipage').hide();
+		$('#bubblepage').hide();
+		$('#eventpage').hide();
+		$("#graphpage").show();
+		showGraph(pageID, pageTitle);
 		return false;
 	});
 
