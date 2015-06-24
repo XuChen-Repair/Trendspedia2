@@ -460,6 +460,7 @@ $(document).ready(function() {
 	});
 
 	$("#event").click(function(){
+		console.log("test");
 		$('#hotpage').hide();
         $('#summarypage').hide();
         $('#wikipage').hide();
@@ -469,7 +470,8 @@ $(document).ready(function() {
 		return false;
 	});
 
-	$("#graph").click(function(){
+	$("#graphQueryNavBarTab").click(function(){
+		console.log("here");
 		$('#hotpage').hide();
         $('#summarypage').hide();
         $('#wikipage').hide();
@@ -477,6 +479,7 @@ $(document).ready(function() {
 		$('#eventpage').hide();
 		$("#graphpage").show();
 		showGraph(pageID, pageTitle);
+		console.log("pageID: " + pageID + " | pageTitle: " + pageTitle);
 		return false;
 	});
 

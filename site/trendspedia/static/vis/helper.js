@@ -1,7 +1,16 @@
-/* TODOs: 
-on stablized, focus on central node.
+/*
+TODOs: 
+when main canvas are stablized, focus on central node.
+after node deleted from the right bar, refresh the main canvas to update the color.
+on main canvas, seperate select/undelect function from click to right click.
+on right click the main canvas, set the popup relative to the click position.
 
-require Jquery to work
+future TODOs:
+on main canvas, when double click, collapse the node.
+
+*/
+
+/* 
 node represent a wikipedia page, node-id being page_id
 directed edge showing the pagelink relationship, edge id being a string with format: fromId.toString() + "to" + toId.toString()
 */
@@ -38,11 +47,6 @@ var options = {
         //container: undefined,
         showButton: true
     },
-    /*nodes: {
-        borderWidth: 0,
-        borderWidthSelected: 3,
-        color: colorSet["original"]
-    },*/
     physics: {
         maxVelocity: 10,
         minVelocity: 0.1,
@@ -53,22 +57,9 @@ var options = {
           updateInterval: 100,
           onlyDynamicEdges: false,
           fit: true
-        },
-        timestep: 0.2
-    }/*,
-    manipulation: {
-        editNode: function (data, callback) {
-            console.log("data:");
-            console.log(data);
-            // filling in the popup DOM elements
-            document.getElementById('operation').innerHTML = "select";
-            document.getElementById('node-id').value = data.id;
-            document.getElementById('node-label').value = data.label;
-            document.getElementById('addButton').onclick = addData.bind(this, data, callback);
-            document.getElementById('cancelButton').onclick = cancelEdit.bind(this,callback);
-            document.getElementById('network-popUp').style.display = 'block';
-        },
-    }*/
+      },
+      timestep: 0.2
+  }
 }
 
 // Nodes whose children is already loaded 
@@ -76,57 +67,6 @@ var withChildren = [];
 
 // User selected nodes
 var selectedNodesArray = [];
-
-var selectedNodes, selectedNetwork;
-
-var selectedOptions = {
-    configure: {
-        enabled: false,
-        filter: 'nodes,edges',
-        //container: undefined,
-        showButton: true
-    },
-    /*nodes: {
-        borderWidth: 0,
-        borderWidthSelected: 3,
-        color: colorSet["selected"]
-    },*/
-    physics: {
-        maxVelocity: 5,
-        minVelocity: 0.1,
-        solver: 'barnesHut',
-        stabilization: {
-          enabled: true,
-          iterations: 1000,
-          updateInterval: 100,
-          onlyDynamicEdges: false,
-          fit: true
-        },
-        timestep: 0.2,
-        barnesHut: {
-          gravitationalConstant: -2000,
-          centralGravity: 0.5,
-          springLength: 95,
-          springConstant: 0.04,
-          damping: 0.09,
-          avoidOverlap: 0
-        }
-    }/*,
-    manipulation: {
-        editNode: function (data, callback) {
-            console.log("data:");
-            console.log(data);
-            // filling in the popup DOM elements
-            document.getElementById('operation').innerHTML = "select";
-            document.getElementById('node-id').value = data.id;
-            document.getElementById('node-label').value = data.label;
-            document.getElementById('addButton').onclick = addData.bind(this, data, callback);
-            document.getElementById('cancelButton').onclick = cancelEdit.bind(this,callback);
-            document.getElementById('network-popUp').style.display = 'block';
-        },
-    }*/
-
-}
 
 // convenience method to stringify a JSON object
 function toJSONString(obj) {
@@ -177,12 +117,12 @@ function addChildren(nodeId, children) {
                 children[i]["color"] = colorSet["original"];
                 nodes.add(children[i]);                
             };
-			edges.add({
-        		id: nodeId.toString() + "to" + children[i]['id'].toString(),
-        		from: nodeId,
-        		to: children[i]['id']
-        	});
-		};
+            edges.add({
+              id: nodeId.toString() + "to" + children[i]['id'].toString(),
+              from: nodeId,
+              to: children[i]['id']
+          });
+        };
     }
     catch (err) {
     	alert(err + "179");
@@ -212,13 +152,13 @@ function neighbourhoodHighlight(params) {
 	    for (var nodeId in allNodes) {
 	    	allNodes[nodeId].color = colorSet["unselected"];
             //allNodes[nodeId].color = undefined;
-	    	if (allNodes[nodeId].hiddenLabel === undefined) {
-	    		allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
-	    		allNodes[nodeId].label = undefined;
-	    	}
-	    }
-	    var connectedNodes = network.getConnectedNodes(selectedNode);
-	    var allConnectedNodes = [];
+            if (allNodes[nodeId].hiddenLabel === undefined) {
+             allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+             allNodes[nodeId].label = undefined;
+         }
+     }
+     var connectedNodes = network.getConnectedNodes(selectedNode);
+     var allConnectedNodes = [];
 
 	    // get the second degree nodes
 	    for (i = 1; i < degrees; i++) {
@@ -248,11 +188,11 @@ function neighbourhoodHighlight(params) {
 		// the main node gets its own color and its label back.
 		allNodes[selectedNode].color = colorSet["highlight"];              
         if (allNodes[selectedNode].hiddenLabel !== undefined) {
-			allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
-			allNodes[selectedNode].hiddenLabel = undefined;
-		}
-	}
-	else if (highlightActive === true) {
+         allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+         allNodes[selectedNode].hiddenLabel = undefined;
+     }
+ }
+ else if (highlightActive === true) {
 		// reset all nodes
 		for (var nodeId in allNodes) {
 			allNodes[nodeId].color = undefined;
@@ -321,216 +261,213 @@ function cancelEdit() {
   console.log("cleared.")
 }
 
-///////////////////////
+/*for original code, refer to creative-list-effect*/
 
-  var lastdeletedID, lastdeletedTEXT, lastdeletedINDEX, count = 0;
-  
-  function updateCounter(){
+var lastdeletedID, lastdeletedTEXT, lastdeletedINDEX, count = 0;
+
+function updateCounter(){
     $('.count').text(count);
     var deleteButton = $('.clear-all');
     if(count === 0){
-      deleteButton.attr('disabled', 'disabled').addClass('disabled');
+        deleteButton.attr('disabled', 'disabled').addClass('disabled');
     }
     else{
-      deleteButton.removeAttr('disabled').removeClass('disabled');
+        deleteButton.removeAttr('disabled').removeClass('disabled');
     }
-  }
-  //generates a unique id
-  function generateId(){
-     return "reminder-" + +new Date();
-  }
-  //saves an item to localStorage
-  var saveReminder = function(id, content){
+}
+
+//generates a unique id
+function generateId(){
+    return "reminder-" + +new Date();
+}
+
+//saves an item to localStorage
+var saveReminder = function(id, content){
     localStorage.setItem(id, content);
-  };
-                                       
-  var editReminder = function(id){
-     var $this = $('#' + id);
-     $this.focus()
-          .append($('<button />', {
-                        "class": "icon-save save-button", 
-                         click: function(){
-                                  
-                                   $this.attr('contenteditable', 'false');
+};
 
-                                   var newcontent = $this.text(), saved = $('.save-notification');
+var editReminder = function(id){
+    var $this = $('#' + id);
+    $this.focus()
+    .append($('<button />', {
+        "class": "icon-save save-button", 
+        click: function(){
 
-                                   if(!newcontent) {
-                                       var confirmation = confirm('Delete this item?');
-                                       if(confirmation) {
-                                          removeReminder(id);
-                                       }
-                                   }
-                                   else{
-                                        localStorage.setItem(id, newcontent);
-                                        saved.show();
-                                        setTimeout(function(){
-                                           saved.hide();
-                                        },2000);
-                                        $(this).remove();
-                                        $('.icon-pencil').show();
-                                   }
-                
-                                }
-                 
-           }));                
-   };
-  
-   //removes item from localStorage
-   var deleteReminder = function(id, content){
-     localStorage.removeItem(id);
-     count--;
-     updateCounter();
-   };
- 
-   var UndoOption = function(){
-      var undobutton = $('.undo-button');
-      setTimeout(function(){
-        // DY
-        console.log('UndoOption begins');
+            $this.attr('contenteditable', 'false');
+
+            var newcontent = $this.text(), saved = $('.save-notification');
+
+            if(!newcontent) {
+                var confirmation = confirm('Delete this item?');
+                if(confirmation) {
+                  removeReminder(id);
+              }
+          }
+          else{
+            localStorage.setItem(id, newcontent);
+            saved.show();
+            setTimeout(function(){
+                saved.hide();
+            },2000);
+            $(this).remove();
+            $('.icon-pencil').show();
+        }
+
+    }
+
+}));
+};
+
+//removes item from localStorage
+var deleteReminder = function(id, content){
+    localStorage.removeItem(id);
+    count--;
+    updateCounter();
+};
+
+var UndoOption = function(){
+    var undobutton = $('.undo-button');
+    setTimeout(function(){
         undobutton.attr("display","block");
-        
-        undobutton.fadeIn(300).on('click', function(){
-          createReminder(lastdeletedID, lastdeletedTEXT, lastdeletedINDEX);
-          //todo: insert back into array
-          console.log("index: " + lastdeletedINDEX);
-          console.log("id: " + lastdeletedID);
 
-          //insertSelectedNode_toArray(id, label)
-          $(this).fadeOut(300);
+        undobutton.fadeIn(300).on('click', function(){
+            createReminder(lastdeletedID, lastdeletedTEXT, lastdeletedINDEX);
+            $(this).fadeOut(300);
         });
         setTimeout(function(){
-          undobutton.fadeOut(1000);
+            undobutton.fadeOut(1000);
         }, 3000);  
-      },1000)
-      
-   };
- 
-   var removeReminder = function(id){
-      var item = $('#' + id );
-      lastdeletedID = id;
-      lastdeletedTEXT = item.text();
-      lastdeletedINDEX = item.index();
-      
-      item.addClass('removed-item')
-          .one('webkitAnimationEnd oanimationend msAnimationEnd animationend', function(e) {
-              $(this).remove();
-           });
+    },1000)
 
-      deleteReminder(id);
-      // delete from selectedNodesArray
-      deleteSelectedNode_fromArray(id)
-     //add undo option only if the edited item is not empty
-      if(lastdeletedTEXT){
+};
+
+var removeReminder = function(id){
+    var item = $('#' + id );
+    lastdeletedID = id;
+    lastdeletedTEXT = item.text();
+    lastdeletedINDEX = item.index();
+
+    item.addClass('removed-item').one('webkitAnimationEnd oanimationend msAnimationEnd animationend', function(e) {
+        $(this).remove();
+    });
+
+    deleteReminder(id);
+    // delete from selectedNodesArray
+    deleteSelectedNode_fromArray(id)
+    //add undo option only if the edited item is not empty
+    if(lastdeletedTEXT){
         UndoOption();
-      }
-    };
-   
-    var createReminder = function(id, content, index){
-      var reminder = '<li id="' + id + '">' + content + '</li>',
-          list = $('.reminders li');
-          
-      
-      if(!$('#'+ id).length){
-        
+    }
+};
+
+var removeReminderForDeleteAllButton = function(id){
+    var item = $('#' + id );
+    lastdeletedID = id;
+    lastdeletedTEXT = item.text();
+    lastdeletedINDEX = item.index();
+
+    item.addClass('removed-item').one('webkitAnimationEnd oanimationend msAnimationEnd animationend', function(e) {
+        $(this).remove();
+    });
+
+    deleteReminder(id);
+    // delete from selectedNodesArray
+    deleteSelectedNode_fromArray(id)
+};
+
+var createReminder = function(id, content, index){
+    var reminder = '<li id="' + id + '">' + content + '</li>',
+    list = $('.reminders li');
+
+
+    if(!$('#'+ id).length){
+
         if(index && index < list.length){
-          var i = index +1;
-          reminder = $(reminder).addClass('restored-item');
-          $('.reminders li:nth-child(' + i + ')').before(reminder);
+            var i = index +1;
+            reminder = $(reminder).addClass('restored-item');
+            $('.reminders li:nth-child(' + i + ')').before(reminder);
         }
         if(index === 0){
-          reminder = $(reminder).addClass('restored-item');
-          $('.reminders').prepend(reminder);
+            reminder = $(reminder).addClass('restored-item');
+            $('.reminders').prepend(reminder);
         }
         if(index === list.length){
-          reminder = $(reminder).addClass('restored-item');
-          $('.reminders').append(reminder);
+            reminder = $(reminder).addClass('restored-item');
+            $('.reminders').append(reminder);
         }
         if(index === undefined){
-          reminder = $(reminder).addClass('new-item');
-          $('.reminders').append(reminder); 
+            reminder = $(reminder).addClass('new-item');
+            $('.reminders').append(reminder); 
         }
 
         var createdItem = $('#'+ id);
 
         createdItem.append($('<button />', {
-                               "class" :"icon-trash delete-button",
-                               "contenteditable" : "false",
-                               click: function(){
-                                        var confirmation = confirm('Delete this item?');
-                                        if(confirmation) {
-                                           removeReminder(id);
-                                         }
-                                      }
-                  })); 
-
-        /*createdItem.append($('<button />', {
-                              "class" :"icon-pencil edit-button",
-                              "contenteditable" : "false",
-                              click: function(){
-                                      createdItem.attr('contenteditable', 'true');
-                                      editReminder(id);
-                                      $(this).hide();
-                              } 
-                 }));*/
+            "class" :"icon-trash delete-button",
+            "contenteditable" : "false",
+            click: function(){
+                var confirmation = confirm('Delete this item?');
+                if(confirmation) {
+                   removeReminder(id);
+               }
+           }
+       })); 
         createdItem.on('keydown', function(ev){
             if(ev.keyCode === 13) return false;
         });
-        
+
         saveReminder(id, content);
         count++;
         updateCounter();
-      }
-    };
-    //handler for input
-    var handleInput = function(){
-          $('#input-form').on('submit', function(event){
-             var input = $('#text'),
-              value = input.val();
-              event.preventDefault();
-              if (value){ 
-                  var text = value;
-                  var id = generateId();
-                  createReminder(id, text);
-                  input.val(''); 
-              }
-          });
-     };
+    }
+};
+//handler for input
+var handleInput = function(){
+    $('#input-form').on('submit', function(event){
+        var input = $('#text'),
+        value = input.val();
+        event.preventDefault();
+        if (value){ 
+            var text = value;
+            var id = generateId();
+            createReminder(id, text);
+            input.val(''); 
+        }
+    });
+};
   
-     var loadReminders = function(){
-       if(localStorage.length!==0){
-         for(var key in localStorage){
-           var text = localStorage.getItem(key);
-           if(key.indexOf('reminder') === 0){
-             createReminder(key, text);
-           }
-         }
-       }
-     };
-  //handler for the "delete all" button
-     var handleDeleteButton = function(){
-          $('.clear-all').on('click', function(){
-            if(confirm('Are you sure you want to delete all the items in the list? There is no turning back after that.')){                 //remove items from DOM
-              var items = $('li[id ^= reminder]');
-              items.addClass('removed-item').one('webkitAnimationEnd oanimationend msAnimationEnd animationend', function(e) {
-                $(this).remove();
-             });
-
-              //look for items in localStorage that start with reminder- and remove them
-              var keys = [];
-              for(var key in localStorage){ 
-                 if(key.indexOf('reminder') === 0){
-
-                   localStorage.removeItem(key);
-                 }
-              }
-              count = 0;
-              updateCounter();
+var loadReminders = function(){
+    if(localStorage.length!==0){
+        for(var key in localStorage){
+            var text = localStorage.getItem(key);
+            if(key.indexOf('reminder') === 0){
+                createReminder(key, text);
             }
-          });
-      };
+        }
+    }
+};
 
-//////////////////////
+//handler for the "delete all" button
+var handleDeleteButton = function(){
+    $('.clear-all').on('click', function(){
+        if(confirm('Are you sure you want to delete all the items in the list? There is no turning back after that.')){
+            //remove items from DOM
+            var items = $('li[id ^= reminder]');
+            items.addClass('removed-item').one('webkitAnimationEnd oanimationend msAnimationEnd animationend', function(e) {
+                $(this).remove();
+            });
+
+            //look for items in localStorage and remove them
+            for(var key in localStorage){
+                removeReminderForDeleteAllButton(key);
+            }
+            count = 0;
+            updateCounter();
+        }
+    });
+};
+
+/*for original code, refer to creative-list-effect. end*/
 
 function insertSelectedNode_toArray(id, label) {
     selectedNodesArray.push({
@@ -573,17 +510,17 @@ function showEditSelection(data) {
         document.getElementById('deleteButton').style.display = 'inline';
         document.getElementById('deleteButton').onclick = function() {
             deleteSelectedNode(data, function() {
-                    updateUserSelectedNodes();
-                });
-            }
+                updateUserSelectedNodes();
+            });
+        }
     } else {
         document.getElementById('addButton').style.display = 'inline';
         document.getElementById('deleteButton').style.display = 'none';
         document.getElementById('addButton').onclick = function() {
             addSelectedNode(data, function() {
-                    updateUserSelectedNodes();
-                });
-            }
+                updateUserSelectedNodes();
+            });
+        }
     }
     document.getElementById('cancelButton').onclick = function() {
         cancelEdit();
@@ -635,22 +572,17 @@ function deleteFromSelectedBox(data) {
 function showGraph_draw(pageID, pageTitle) {
     // create an array with nodes
     nodes = new vis.DataSet();
-    /*nodes.on('*', function () {
-        document.getElementById('nodes').innerHTML = toJSONString(nodes.get());
-    });*/
+
     nodes.add([
-        {
-            id: pageID,
-            label: pageTitle, 
-            color: colorSet["original"]
-        }
+    {
+        id: pageID,
+        label: pageTitle, 
+        color: colorSet["original"]
+    }
     ]);
 
     // create an array with edges
     edges = new vis.DataSet();
-    /*edges.on('*', function () {
-        document.getElementById('edges').innerHTML = toJSONString(edges.get());
-    });*/
 
     // create a network for user to select nodes
     var container = document.getElementById('network');
@@ -659,45 +591,9 @@ function showGraph_draw(pageID, pageTitle) {
         nodes: nodes,
         edges: edges
     };
-    /*console.log(container);
-    console.log(data);
-    console.log(options);*/
 
-    
     network = new vis.Network(container, data, options);
     network.on("click",clickNode);
 
-/*
-    // for displaying selected nodes
-    selectedNodes = new vis.DataSet();
-
-    var selectedContainer = document.getElementById('selected');
-
-    var selectedData = {
-        nodes: selectedNodes,
-        edges: new vis.DataSet()
-    };
-
-    selectedNetwork = new vis.Network(selectedContainer, selectedData, selectedOptions);
-    */
-
-
-    ///////////////////
-
-/*    $("#deleteButton").focus().append($('<button />', {
-                               "class" :"icon-trash delete-button",
-                               "contenteditable" : "false",
-                               click: function(){
-                                        var confirmation = confirm('Delete this item?');
-                                        if(confirmation) {
-                                           removeReminder(id);
-                                         }
-                                      }
-                  }));*/
-
-    /*var height = 
-    $( "#network-popUp" ).attr( "left", );
-    $( "#network-popUp" ).attr( "top", );*/
+    handleDeleteButton();
 }
-
-
