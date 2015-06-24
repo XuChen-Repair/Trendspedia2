@@ -1,0 +1,43 @@
+html, body {
+  font: 11pt arial;
+}
+
+#network {
+  position:relative;
+  width: 77%;
+  height: 1000px;
+  border: 1px solid lightgray;
+  float: left;
+}
+
+#network-popUp {
+  display:none;
+  position:relative;
+  top:400px;
+  left:300px;
+  z-index:299;
+  width:150px;
+  height:90px;
+  background-color: rgba(249, 249, 249, 0.64);
+  /*border-style:solid;
+  border-width:3px;
+  border-color: #5394ed;*/
+  padding:10px;
+  text-align: center;
+}
+
+#selected {
+  /* from creative-list-effect*/
+  background-color: #AC193D;
+  color: white;
+
+  position:relative;
+  width: 20%;
+  height: 1000px;
+  border: 1px solid lightgray;
+  float: right;
+}
+
+/*#node-label, #addButton, #deleteButton, #cancelButton {
+  opacity: 1.0 !important;
+}*/
