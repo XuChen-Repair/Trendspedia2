@@ -12,9 +12,9 @@ html, body {
 
 #network-popUp {
   display:none;
-  position:relative;
-  top:400px;
-  left:300px;
+  position:absolute;
+  /*top:400px;
+  left:300px;*/
   z-index:299;
   width:150px;
   height:90px;

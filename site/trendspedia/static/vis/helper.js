@@ -41,24 +41,27 @@ var colorSet = {
 };
 
 var options = {
-    configure: {
-        enabled: false,
-        filter: 'nodes,edges',
-        //container: undefined,
-        showButton: true
+  physics:{
+    enabled: true,
+    barnesHut: {
+      gravitationalConstant: -2000,
+      centralGravity: 0.3,
+      springLength: 100,
+      springConstant: 0.15,
+      damping: 0.75,
+      avoidOverlap: 0
     },
-    physics: {
-        maxVelocity: 10,
-        minVelocity: 0.1,
-        solver: 'barnesHut',
-        stabilization: {
-          enabled: true,
-          iterations: 1000,
-          updateInterval: 100,
-          onlyDynamicEdges: false,
-          fit: true
-      },
-      timestep: 0.2
+    maxVelocity: 35,
+    minVelocity: 0.1,
+    solver: 'barnesHut',
+    stabilization: {
+      enabled: true,
+      iterations: 1000,
+      updateInterval: 100,
+      onlyDynamicEdges: false,
+      fit: true
+    },
+    timestep: 0.6
   }
 }
 
@@ -125,7 +128,7 @@ function addChildren(nodeId, children) {
         };
     }
     catch (err) {
-    	alert(err + "179");
+    	alert(err);
     }
 }
 
@@ -216,11 +219,12 @@ function neighbourhoodHighlight(params) {
         nodes.update(updateArray);
     }
     catch (err) {
-        alert(err + "270");
+        alert(err);
     }
 }
 
-function updateUserSelectedNodes() {
+// change unselected node color to selected (but does not do the other way around)
+function updateColorOfUserNewlySelectedNodes() {
     try {
         for(var i = 0; i < selectedNodesArray.length; i++) {
             nodes.update({
@@ -231,7 +235,7 @@ function updateUserSelectedNodes() {
         }
     }
     catch (err) {
-        alert(err + "285");
+        alert(err);
     }
 }
 
@@ -258,7 +262,6 @@ function clearPopUp() {
 
 function cancelEdit() {
   clearPopUp();
-  console.log("cleared.")
 }
 
 /*for original code, refer to creative-list-effect*/
@@ -338,7 +341,7 @@ var UndoOption = function(){
             undobutton.fadeOut(1000);
         }, 3000);  
     },1000)
-
+    updateColorOfUserNewlySelectedNodes();
 };
 
 var removeReminder = function(id){
@@ -355,10 +358,25 @@ var removeReminder = function(id){
     // delete from selectedNodesArray
     deleteSelectedNode_fromArray(id)
     //add undo option only if the edited item is not empty
+
+    unselectedNodeColorUpdate(id);
+
     if(lastdeletedTEXT){
         UndoOption();
     }
 };
+
+var unselectedNodeColorUpdate = function(id){
+    // change back color
+    var currentColor = nodes.get(id)["color"];
+    if (JSON.stringify(currentColor) === JSON.stringify(colorSet["selected"])) {
+        nodes.update({
+            id: id,
+            label: nodes.get(id)["label"],
+            color: colorSet["original"]
+        });
+    };
+}
 
 var removeReminderForDeleteAllButton = function(id){
     var item = $('#' + id );
@@ -372,13 +390,14 @@ var removeReminderForDeleteAllButton = function(id){
 
     deleteReminder(id);
     // delete from selectedNodesArray
-    deleteSelectedNode_fromArray(id)
+    deleteSelectedNode_fromArray(id);
+
+    unselectedNodeColorUpdate(id);
 };
 
 var createReminder = function(id, content, index){
     var reminder = '<li id="' + id + '">' + content + '</li>',
     list = $('.reminders li');
-
 
     if(!$('#'+ id).length){
 
@@ -421,6 +440,7 @@ var createReminder = function(id, content, index){
         updateCounter();
     }
 };
+
 //handler for input
 var handleInput = function(){
     $('#input-form').on('submit', function(event){
@@ -505,12 +525,18 @@ function showEditSelection(data) {
     // filling in the popup DOM elements
     document.getElementById('node-label').innerHTML = data.label;
     var result = $.grep(selectedNodesArray, function(e){ return e.id === data.id; });
+    // set the pop up at the posisiton of the mouse
+    var networkCanvasWidth = $("#network").width();
+    var networkCanvasHeight = $("#network").height();
+    $("#network-popUp").css("left", networkCanvasWidth / 2);
+    $("#network-popUp").css("top", networkCanvasHeight / 2);
+    
     if (result.length > 0) {
         document.getElementById('addButton').style.display = 'none';
         document.getElementById('deleteButton').style.display = 'inline';
         document.getElementById('deleteButton').onclick = function() {
             deleteSelectedNode(data, function() {
-                updateUserSelectedNodes();
+                updateColorOfUserNewlySelectedNodes();
             });
         }
     } else {
@@ -518,7 +544,7 @@ function showEditSelection(data) {
         document.getElementById('deleteButton').style.display = 'none';
         document.getElementById('addButton').onclick = function() {
             addSelectedNode(data, function() {
-                updateUserSelectedNodes();
+                updateColorOfUserNewlySelectedNodes();
             });
         }
     }
@@ -528,20 +554,33 @@ function showEditSelection(data) {
     document.getElementById('network-popUp').style.display = 'block';
 }
 
-// on click
+// on click, show children and hightlight 1st and 2nd layers of children
 function clickNode(params) {
     var nodeId = params.nodes[0];
-    if (nodeId != null) {
+    if (nodeId == null) {
+        clearPopUp();
+    } else {
+        if (nodes.get(nodeId)["label"] !== document.getElementById('node-label').innerHTML) {
+            clearPopUp();
+        }
         if (!isWithChildren(nodeId)) {
             showChildren(nodeId);
         };
         neighbourhoodHighlight(params);
-        // network.on("stabilized", focus(nodeId));
+        focus(nodeId);
+    };
+    updateColorOfUserNewlySelectedNodes();
+}
+
+// on double click, show add or delete menu
+function doubleClickNode(params) {
+    var nodeId = params.nodes[0];
+    if (nodeId != null) {
         focus(nodeId);
         selectedNode = nodes.get(nodeId);
         showEditSelection(selectedNode);
     };
-    updateUserSelectedNodes();
+    updateColorOfUserNewlySelectedNodes();
 }
 
 // add node to selected box
@@ -555,7 +594,7 @@ function addToSelectedBox(data) {
         );
     }
     catch (err) {
-        alert(err + "383");
+        alert(err);
     }    
 }
 
@@ -565,11 +604,16 @@ function deleteFromSelectedBox(data) {
         selectedNodes.remove({id: data.id});
     }
     catch (err) {
-        alert(err + "393");
+        alert(err);
     }
 }
 
 function showGraph_draw(pageID, pageTitle) {
+    withChildren = [];
+    var windowHeight = window.innerHeight;
+    $("#network").css("height", windowHeight);
+    $("#selected").css("height", windowHeight);
+
     // create an array with nodes
     nodes = new vis.DataSet();
 
@@ -593,7 +637,13 @@ function showGraph_draw(pageID, pageTitle) {
     };
 
     network = new vis.Network(container, data, options);
-    network.on("click",clickNode);
+    network.on("click", clickNode);
+    network.on("doubleClick", doubleClickNode);
+
+    // disable the browser default right click menu
+    $('#network').bind('contextmenu', function(e){
+        return false;
+    });
 
     handleDeleteButton();
 }
