@@ -582,6 +582,11 @@ function presentMaterialsContent(hotMaterial){
 			imagesHtml = imagesHtml + "</div>";
 		}
 	}
+	imagesHtml = "<div id = '"+hotMaterial.tweetID+"'>"+
+						imagesHtml+
+					"</div>";
+	if(length == 0)
+		imagesHtml = "";
 	//remove empty lines
 	if(hotMaterial.title == null || hotMaterial.description == null)
 		return;
@@ -591,12 +596,10 @@ function presentMaterialsContent(hotMaterial){
 	//tempfix for hoturl
 	$("#hot-Materials").append("<dt style='font-weight:normal !important'>"+
                                    	"<font>"+hotCount+".</font>"+
-					"<h4 style='font-weight:bold !important'><a href = '"+hotMaterial.url+"'>"+hotMaterial.title+"</a></h4>"+
+					"<h4 style='font-weight:bold !important'><a href = '"+hotMaterial.url+"'>"+hotCount + ": " + hotMaterial.title+"</a></h4>"+
                                         "<br>"+
                                         "<p>"+hotMaterial.description+"</p>"+
-					"<div id = '"+hotMaterial.tweetID+"'>"+
-						imagesHtml+
-					"</div>"+"<br><br>"+
+					imagesHtml + "<br><br>"+
                                    "</dt>");
 	
 }
