@@ -590,18 +590,35 @@ function presentMaterialsContent(hotMaterial){
 	//remove empty lines
 	if(hotMaterial.title == null || hotMaterial.description == null)
 		return;
+	var shortDescription = hotMaterial.description;
 	if(hotMaterial.description.length > 500){
-		hotMaterial.description = hotMaterial.description.substring(0,500) + "...";
+		shortDescription = hotMaterial.description.substring(0,500) + "...";
 	}
 	//tempfix for hoturl
-	$("#hot-Materials").append("<dt style='font-weight:normal !important'>"+
+	var seeMoreFunc = 'function(){ $("hot' + hotCount + '").css("max-height":"100em"); }';
+	$("#hot-Materials").append("<dt id='hot" + hotCount + "style='font-weight:normal !important'>"+
 					"<h4 style='font-weight:bold !important'><a href = '"+hotMaterial.url+"'>"+hotCount + ": " + hotMaterial.title+"</a></h4>"+
-                                        "<p>"+hotMaterial.description+"</p>"+
+                                        "<p class='bigdesc hiddenContent'>"+hotMaterial.description+"</p>"+
+                                        "<p class='smalldesc'>"+shortDescription+"</p>"+
+          "<a class='hu-seemore' href='#'>See More</a><br>"+
 					imagesHtml + "<br>"+
                                    "</dt>");
 	
 }
 
+$(function(){
+	$('#hot-Materials').on('click', '.hu-seemore', function(){
+		if($(this).text() == "See More"){
+			$(this).siblings('.bigdesc').removeClass('hiddenContent');
+			$(this).siblings('.smalldesc').addClass('hiddenContent');
+			$(this).text('See Less');
+		}else{
+			$(this).siblings('.bigdesc').addClass('hiddenContent');
+			$(this).siblings('.smalldesc').removeClass('hiddenContent');
+			$(this).text('See More');
+		}
+	});
+});
 /*function presentMaterialsContent(hotMaterial){
 	var url = hotMaterial.url;
 	requestTitle(url, function(data) {

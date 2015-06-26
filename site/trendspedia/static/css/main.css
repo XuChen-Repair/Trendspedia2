@@ -69,6 +69,9 @@ body {
     display : none;
 }
 
+.hiddenContent{
+    display: none !important;
+}
 
 /* Temp fix for conflict of css loading from real wikipedia */
 .navbar ul.dropdown-menu {
