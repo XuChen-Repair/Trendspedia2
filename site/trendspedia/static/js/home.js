@@ -569,6 +569,10 @@ function requestDescription(site, callback) {
 function presentMaterialsContent(hotMaterial){
 	hotCount++; 
 	imagesHtml = "";
+	var length = hotMaterial.images.length;
+	//tempfix for images showing up weird
+	if(length > 4)
+		length = 4;
 	for(var i = 0; i < hotMaterial.images.length;i++){
 		if(i%4 == 0){
 			imagesHtml = imagesHtml + "<div class = 'row-fluid' style = 'margin-top:10px;'>";
@@ -578,9 +582,16 @@ function presentMaterialsContent(hotMaterial){
 			imagesHtml = imagesHtml + "</div>";
 		}
 	}
-	$("#hot-Materials").append("<dt>"+
+	//remove empty lines
+	if(hotMaterial.title == null || hotMaterial.description == null)
+		return;
+	if(hotMaterial.description.length > 500){
+		hotMaterial.description = hotMaterial.description.substring(0,500) + "...";
+	}
+	//tempfix for hoturl
+	$("#hot-Materials").append("<dt style='font-weight:normal !important'>"+
                                    	"<font>"+hotCount+".</font>"+
-					"<a href = '"+hotMaterial.url+"'>"+hotMaterial.title+"</a>"+
+					"<h4 style='font-weight:bold !important'><a href = '"+hotMaterial.url+"'>"+hotMaterial.title+"</a></h4>"+
                                         "<br>"+
                                         "<p>"+hotMaterial.description+"</p>"+
 					"<div id = '"+hotMaterial.tweetID+"'>"+
