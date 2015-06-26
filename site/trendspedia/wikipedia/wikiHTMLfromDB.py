@@ -64,7 +64,7 @@ def html(page_id):
             # """
             #print code
             res = parse(text, page_title)
-            return res.encode('utf8')
+            return res.encode('utf-8')
 
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -77,17 +77,24 @@ def html(page_id):
         cnx.close()
 
 # shell execute PHP
-def php(text, title):
-    import subprocess
+def parse(text, title):
+    import subprocess, codecs
     # open process
-    p = subprocess.Popen(['php', 'Server.php', text, title], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-    # read output
-    o = p.communicate(code)[0]
-    # kill process
-    try:
-        os.kill(p.pid, signal.SIGTERM)
-    except:
-        pass
+    if text is None or title is None:
+        o = "<h1>Parse error</h1>"
+    else:
+        # text, tmp = codecs.utf_8_decode(text.encode('utf-8'))
+        title, tmp = codecs.utf_8_decode(text.encode('utf-8'))
+        # text = text.encode('utf-8').decode('utf-8')
+        # title=title.encode('utf-8').decode('utf-8')
+        p = subprocess.Popen(['php', 'Server.php', "'" + title + "'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+        # read output
+        o = p.communicate(text.encode('utf-8'))[0]
+        # kill process
+        try:
+            os.kill(p.pid, signal.SIGTERM)
+        except:
+            pass
     return o
 
 if __name__ == "__main__":
