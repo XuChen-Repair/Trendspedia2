@@ -573,7 +573,7 @@ function presentMaterialsContent(hotMaterial){
 	//tempfix for images showing up weird
 	if(length > 4)
 		length = 4;
-	for(var i = 0; i < hotMaterial.images.length;i++){
+	for(var i = 0; i < length;i++){
 		if(i%4 == 0){
 			imagesHtml = imagesHtml + "<div class = 'row-fluid' style = 'margin-top:10px;'>";
 		}
