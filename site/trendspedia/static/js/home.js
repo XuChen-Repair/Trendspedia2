@@ -595,11 +595,9 @@ function presentMaterialsContent(hotMaterial){
 	}
 	//tempfix for hoturl
 	$("#hot-Materials").append("<dt style='font-weight:normal !important'>"+
-                                   	"<font>"+hotCount+".</font>"+
 					"<h4 style='font-weight:bold !important'><a href = '"+hotMaterial.url+"'>"+hotCount + ": " + hotMaterial.title+"</a></h4>"+
-                                        "<br>"+
                                         "<p>"+hotMaterial.description+"</p>"+
-					imagesHtml + "<br><br>"+
+					imagesHtml + "<br>"+
                                    "</dt>");
 	
 }
