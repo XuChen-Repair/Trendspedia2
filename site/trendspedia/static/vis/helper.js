@@ -355,7 +355,7 @@ var removeReminder = function(id){
 
     deleteReminder(id);
     // delete from selectedNodesArray
-    deleteSelectedNode_fromArray(id)
+    deleteSelectedNodeFromArray(id)
     //add undo option only if the edited item is not empty
 
     unselectedNodeColorUpdate(id);
@@ -389,7 +389,7 @@ var removeReminderForDeleteAllButton = function(id){
 
     deleteReminder(id);
     // delete from selectedNodesArray
-    deleteSelectedNode_fromArray(id);
+    deleteSelectedNodeFromArray(id);
 
     unselectedNodeColorUpdate(id);
 };
@@ -488,7 +488,7 @@ var handleDeleteButton = function(){
 
 /*for original code, refer to creative-list-effect. end*/
 
-function insertSelectedNode_toArray(id, label) {
+function insertSelectedNodeToArray(id, label) {
     selectedNodesArray.push({
         id: id,
         label: label
@@ -497,13 +497,13 @@ function insertSelectedNode_toArray(id, label) {
 
 function addSelectedNode(data, callback) {
   clearPopUp();  
-  insertSelectedNode_toArray(data.id, data.label);
+  insertSelectedNodeToArray(data.id, data.label);
   // addToSelectedBox(data);
   createReminder(data.id, data.label);
   callback.apply(this,[]);  
 }
 
-function deleteSelectedNode_fromArray(id) {
+function deleteSelectedNodeFromArray(id) {
     for(var i = 0; i < selectedNodesArray.length; i++) {
         var obj = selectedNodesArray[i];
         if(obj.id == id) {
@@ -514,7 +514,7 @@ function deleteSelectedNode_fromArray(id) {
 
 function deleteSelectedNode(data, callback) {
     clearPopUp();
-    deleteSelectedNode_fromArray(data.id);
+    deleteSelectedNodeFromArray(data.id);
     //deleteFromSelectedBox(data);
     removeReminder(data.id)
     callback.apply(this,[]);    
@@ -613,7 +613,7 @@ function deleteFromSelectedBox(data) {
     }
 }
 
-function showGraph_draw(pageID, pageTitle) {
+function showGraphDraw(pageID, pageTitle) {
     withChildren = [];
     var windowHeight = window.innerHeight;
     $("#network").css("height", windowHeight);
@@ -652,7 +652,7 @@ function showGraph_draw(pageID, pageTitle) {
     });    
 }
 
-function showGraph_redraw() {
+function showGraphRedraw() {
     try {
         for (var i = nodes.get().length - 1; i >= 0; i--) {
             var currentNode = nodes.get()[i];

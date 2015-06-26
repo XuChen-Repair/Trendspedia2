@@ -373,11 +373,11 @@ $(document).ready(function() {
 		handleDeleteButton();
 		// call function initializing the graph (in vis helper.js)
 		if (withChildren.length === 0) {
-			showGraph_draw(pageID, pageTitle);
+			showGraphDraw(pageID, pageTitle);
 		} else {
 			console.log("redraw");
-			showGraph_redraw();
-		}		
+			showGraphRedraw();
+		}
 	}
 
 	//loading the page
