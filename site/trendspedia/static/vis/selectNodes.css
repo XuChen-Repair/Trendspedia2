@@ -17,8 +17,8 @@ html, body {
   left:300px;*/
   z-index:299;
   width:150px;
-  height:90px;
-  background-color: rgba(249, 249, 249, 0.64);
+  /*height:90px;*/
+  background-color: rgba(255, 255, 255, 0.64);
   /*border-style:solid;
   border-width:3px;
   border-color: #5394ed;*/
@@ -26,11 +26,24 @@ html, body {
   text-align: center;
 }
 
+.popupIcon {
+  position: relative !important;
+  top: 0px !important;
+  left: 0px !important;
+  cursor: pointer !important;
+}
+
+#cancelButton {
+  position: relative;
+  margin-left: 5px;
+  left: 0px;
+  top: 0px;
+}
+
 #selected {
   /* from creative-list-effect*/
   background-color: #AC193D;
   color: white;
-
   position:relative;
   width: 20%;
   height: 1000px;

@@ -51,7 +51,7 @@ var options = {
       damping: 0.75,
       avoidOverlap: 0
     },
-    maxVelocity: 35,
+    maxVelocity: 45,
     minVelocity: 0.1,
     solver: 'barnesHut',
     stabilization: {
@@ -61,7 +61,7 @@ var options = {
       onlyDynamicEdges: false,
       fit: true
     },
-    timestep: 0.6
+    timestep: 0.5
   }
 }
 
@@ -233,8 +233,7 @@ function updateColorOfUserNewlySelectedNodes() {
                 color: colorSet["selected"]
             });
         }
-    }
-    catch (err) {
+    } catch (err) {
         alert(err);
     }
 }
@@ -430,7 +429,7 @@ var createReminder = function(id, content, index){
                    removeReminder(id);
                }
            }
-       })); 
+        }));
         createdItem.on('keydown', function(ev){
             if(ev.keyCode === 13) return false;
         });
@@ -521,21 +520,21 @@ function deleteSelectedNode(data, callback) {
     callback.apply(this,[]);    
 }
 
-function showEditSelection(data) {
+function showEditSelection(node, DOM) {
     // filling in the popup DOM elements
-    document.getElementById('node-label').innerHTML = data.label;
-    var result = $.grep(selectedNodesArray, function(e){ return e.id === data.id; });
+    document.getElementById('node-label').innerHTML = node.label;
+    var result = $.grep(selectedNodesArray, function(e){ return e.id === node.id; });
     // set the pop up at the posisiton of the mouse
-    var networkCanvasWidth = $("#network").width();
-    var networkCanvasHeight = $("#network").height();
-    $("#network-popUp").css("left", networkCanvasWidth / 2);
-    $("#network-popUp").css("top", networkCanvasHeight / 2);
+    /*var networkCanvasWidth = $("#network").width();
+    var networkCanvasHeight = $("#network").height();*/
+    $("#network-popUp").css("left", DOM["x"] + 5);
+    $("#network-popUp").css("top", DOM["y"] + 5);
     
     if (result.length > 0) {
         document.getElementById('addButton').style.display = 'none';
         document.getElementById('deleteButton').style.display = 'inline';
         document.getElementById('deleteButton').onclick = function() {
-            deleteSelectedNode(data, function() {
+            deleteSelectedNode(node, function() {
                 updateColorOfUserNewlySelectedNodes();
             });
         }
@@ -543,7 +542,7 @@ function showEditSelection(data) {
         document.getElementById('addButton').style.display = 'inline';
         document.getElementById('deleteButton').style.display = 'none';
         document.getElementById('addButton').onclick = function() {
-            addSelectedNode(data, function() {
+            addSelectedNode(node, function() {
                 updateColorOfUserNewlySelectedNodes();
             });
         }
@@ -554,33 +553,39 @@ function showEditSelection(data) {
     document.getElementById('network-popUp').style.display = 'block';
 }
 
-// on click, show children and hightlight 1st and 2nd layers of children
-function clickNode(params) {
+// on click, show add or delete menu
+function hold(params) {
+    var nodeId = params.nodes[0];
+    if (nodeId != null) {        
+        selectedNode = nodes.get(nodeId);
+        var DOM = params["pointer"]["DOM"];
+        showEditSelection(selectedNode, DOM);
+    };
+}
+
+// on click, if node is selected, show children and hightlight 1st and 2nd layers of children, else hide popup
+function click(params) {
     var nodeId = params.nodes[0];
     if (nodeId == null) {
         clearPopUp();
     } else {
+        /*focus(nodeId);*/
         if (nodes.get(nodeId)["label"] !== document.getElementById('node-label').innerHTML) {
             clearPopUp();
         }
         if (!isWithChildren(nodeId)) {
             showChildren(nodeId);
         };
-        neighbourhoodHighlight(params);
-        focus(nodeId);
+        neighbourhoodHighlight(params);        
     };
     updateColorOfUserNewlySelectedNodes();
 }
 
-// on double click, show add or delete menu
-function doubleClickNode(params) {
+function doubleClick(params) {
     var nodeId = params.nodes[0];
     if (nodeId != null) {
         focus(nodeId);
-        selectedNode = nodes.get(nodeId);
-        showEditSelection(selectedNode);
-    };
-    updateColorOfUserNewlySelectedNodes();
+    }
 }
 
 // add node to selected box
@@ -637,13 +642,29 @@ function showGraph_draw(pageID, pageTitle) {
     };
 
     network = new vis.Network(container, data, options);
-    network.on("click", clickNode);
-    network.on("doubleClick", doubleClickNode);
+    network.on("click", click);
+    network.on("hold", hold);
+    network.on("doubleClick", doubleClick);
 
     // disable the browser default right click menu
     $('#network').bind('contextmenu', function(e){
         return false;
-    });
+    });    
+}
 
-    handleDeleteButton();
+function showGraph_redraw() {
+    try {
+        for (var i = nodes.get().length - 1; i >= 0; i--) {
+            var currentNode = nodes.get()[i];
+            if (JSON.stringify(currentNode.color) !== JSON.stringify(colorSet["selected"])) {
+                nodes.update({
+                    id: currentNode.id,
+                    label: currentNode.label, 
+                    color: undefined
+                });
+            }
+        };
+    } catch (err) {
+        alert(err);
+    }
 }

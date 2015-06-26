@@ -370,11 +370,14 @@ $(document).ready(function() {
 
 	//DY
 	var showGraph = function(pageID, pageTitle) {
-		/*console.log("showGraph");
-		console.log(pageID + "   " + pageTitle);*/
+		handleDeleteButton();
 		// call function initializing the graph (in vis helper.js)
-		showGraph_draw(pageID, pageTitle);
-
+		if (withChildren.length === 0) {
+			showGraph_draw(pageID, pageTitle);
+		} else {
+			console.log("redraw");
+			showGraph_redraw();
+		}		
 	}
 
 	//loading the page
