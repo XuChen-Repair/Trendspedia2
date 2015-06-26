@@ -374,11 +374,14 @@ $(document).ready(function() {
 
 	//DY
 	var showGraph = function(pageID, pageTitle) {
-		/*console.log("showGraph");
-		console.log(pageID + "   " + pageTitle);*/
+		handleDeleteButton();
 		// call function initializing the graph (in vis helper.js)
-		showGraph_draw(pageID, pageTitle);
-
+		if (withChildren.length === 0) {
+			showGraphDraw(pageID, pageTitle);
+		} else {
+			console.log("redraw");
+			showGraphRedraw();
+		}
 	}
 
 	//loading the page
@@ -460,7 +463,6 @@ $(document).ready(function() {
 	});
 
 	$("#event").click(function(){
-		console.log("test");
 		$('#hotpage').hide();
         $('#summarypage').hide();
         $('#wikipage').hide();
@@ -471,7 +473,6 @@ $(document).ready(function() {
 	});
 
 	$("#graphQueryNavBarTab").click(function(){
-		console.log("here");
 		$('#hotpage').hide();
         $('#summarypage').hide();
         $('#wikipage').hide();
@@ -479,7 +480,6 @@ $(document).ready(function() {
 		$('#eventpage').hide();
 		$("#graphpage").show();
 		showGraph(pageID, pageTitle);
-		console.log("pageID: " + pageID + " | pageTitle: " + pageTitle);
 		return false;
 	});
 
