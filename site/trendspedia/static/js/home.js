@@ -600,7 +600,7 @@ function presentMaterialsContent(hotMaterial){
 					"<h4 style='font-weight:bold !important'><a href = '"+hotMaterial.url+"'>"+hotCount + ": " + hotMaterial.title+"</a></h4>"+
                                         "<p class='bigdesc hiddenContent'>"+hotMaterial.description+"</p>"+
                                         "<p class='smalldesc'>"+shortDescription+"</p>"+
-          "<a class='hu-seemore' href='#'>See More</a><br>"+
+          "<a class='hu-seemore'>See More</a><br>"+
 					imagesHtml + "<br>"+
                                    "</dt>");
 	
