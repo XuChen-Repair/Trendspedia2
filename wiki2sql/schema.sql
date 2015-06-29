@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS /*_*/page (
   page_revision int unsigned NOT NULL REFERENCES revision(rev_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+ALTER TABLE page CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
+
 --
 -- Every edit of a page creates also a revision row.
 -- This stores metadata about the revision, and a reference
@@ -64,6 +66,8 @@ CREATE TABLE IF NOT EXISTS /*_*/revision (
 
 ) MAX_ROWS=10000000 AVG_ROW_LENGTH=1024;
 -- In case tables are created as MyISAM, use row hints for MySQL <5.0 to avoid 4GB limit
+
+ALTER TABLE revision CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
 
 --
 -- Holds text of individual page revisions.
