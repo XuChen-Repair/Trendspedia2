@@ -275,14 +275,19 @@ def queueChanges(timestamp, title):
 # text_text from table text is in wiki markup language.
 # process page links from text_text
 def updatePagelinks(page_id, page_title):
+    existingLinkIds = []
+    added_ids = []
+    newLinkIdsInExistingIds = []
+
     try:
-        cnx = connection.MySQLConnection(user='root', password='', host='localhost', database='wikidb')
+        cnx = connection.MySQLConnection(user='root', password='', host='localhost', database='wikidb', buffered=True)
         cursor = cnx.cursor()
 
         # get pagelinks
         sqlSelectPage = "SELECT page_namespace, page_revision FROM page WHERE page_id = %s"
         cursor.execute(sqlSelectPage, (page_id, ))
         row = cursor.fetchone()
+        # flag for whehter the given page have links
         pagelinksExistFlag = False
 
         if row:
@@ -304,37 +309,39 @@ def updatePagelinks(page_id, page_title):
                         pagelinksExistFlag = True
 
         # get all old pagelinks
-        sqlSelectExisting = "SELECT pl_title FROM pagelinks WHERE pl_from_id = %s"
+        sqlSelectExisting = "SELECT pl_id FROM pagelinks WHERE pl_from_id = %s"
         cursor.execute(sqlSelectExisting, (str(page_id), ))
-        existingLinks = cursor.fetchall()
+        existingLinkIds = cursor.fetchall()
+
         def convert(link):
             link = list(link)
-            link = link[0].decode('utf-8')
+            link = link[0]
             return link
-        existingLinks = map(convert, existingLinks)
+        existingLinkIds = map(convert, existingLinkIds)
 
-        added_titles = []
         # insert new links
-        if pagelinksExistFlag: 
-            for link in links:
+        if pagelinksExistFlag:
+            for link in links:                
                 link_titles = link.decode("utf8")
                 # for link in the format of [[XX|YY]], get XX.
                 link_title = re.findall(r"^[^\|]+", link_titles)[0]
 
+                # flag for whether the link is not the page itself and is an existing page in db
                 flag = False
                 if page_title != link_title:
                     sqlCheckExistenceOfPage = "SELECT page_id FROM page WHERE page_title = %s"
                     cursor.execute(sqlCheckExistenceOfPage, (link_title, ))
-                    row = cursor.fetchone()                    
+                    row = cursor.fetchone()
                     if row is not None:
                         link_id = row[0]
                         flag = True
+
                 if flag:
-                    if link_title in existingLinks:
-                        existingLinks.remove(link_title)
-                    elif link_title in added_titles:
+                    if link_id in existingLinkIds:
+                        newLinkIdsInExistingIds.append(link_id)
+                    elif link_id in added_ids:
                         pass
-                    else:                        
+                    else:
                         add_link = ("INSERT INTO pagelinks "
                             "(pl_from_id, pl_from_title, pl_namespace, pl_id, pl_title) "
                             "VALUES (%s, %s, %s, %s, %s);")
@@ -345,12 +352,17 @@ def updatePagelinks(page_id, page_title):
                             link_title)
                         cursor.execute(add_link, data_link)
                         cnx.commit()
-                        added_titles.append(link_title)
+                        added_ids.append(link_id)
 
-                for titleTORemove in existingLinks:
-                    sqlDeleteLink = "DELETE FROM pagelinks WHERE pl_from_id = %s AND pl_title = %s"
-                    cursor.execute(sqlDeleteLink, (page_id, titleTORemove))
-                    cnx.commit()
+            # remove duplicate in newLinkIdsInExistingIds
+            newLinkIdsInExistingIds = list(set(newLinkIdsInExistingIds))
+            for newLinkIdInExistingIds in newLinkIdsInExistingIds:
+                existingLinkIds.remove(newLinkIdInExistingIds)
+
+            for idTORemove in existingLinkIds:
+                sqlDeleteLink = "DELETE FROM pagelinks WHERE pl_from_id = %s AND pl_id = %s"
+                cursor.execute(sqlDeleteLink, (page_id, idTORemove))
+                cnx.commit()
 
         print page_title + ": Done."
 
