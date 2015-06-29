@@ -334,6 +334,7 @@ $(document).ready(function() {
 						$('#searchResult').html(html);
 						$('#searchResult').show();
 						$('#contentArea').hide();
+						$('#graphpage').hide();
 					} else {
 						$('.tabbable').hide();
 						var noResult = "<h1>No result found</h1>";
