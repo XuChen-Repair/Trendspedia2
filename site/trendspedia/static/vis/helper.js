@@ -17,6 +17,8 @@ directed edge showing the pagelink relationship, edge id being a string with for
 
 var nodes, edges, network;
 
+var highlightActive = false;
+
 var colorSet = {
     "highlight": {
         "border": "rgba(43,124,234,1)",
@@ -46,13 +48,13 @@ var options = {
     barnesHut: {
       gravitationalConstant: -2000,
       centralGravity: 0.3,
-      springLength: 100,
+      springLength: 150,
       springConstant: 0.15,
-      damping: 0.75,
+      damping: 0.65,
       avoidOverlap: 0
     },
-    maxVelocity: 45,
-    minVelocity: 0.1,
+    maxVelocity: 50,
+    minVelocity: 0.2,
     solver: 'barnesHut',
     stabilization: {
       enabled: true,
@@ -68,6 +70,9 @@ var options = {
 // Nodes whose children is already loaded 
 var withChildren = [];
 
+// Nodes whose children is shown in the graph
+var childrenShown = [];
+
 // User selected nodes
 var selectedNodesArray = [];
 
@@ -79,6 +84,10 @@ function toJSONString(obj) {
 // return if a node's children is alreay loaded. boolean returned.
 function isWithChildren(nodeId) {
 	return (withChildren.indexOf(nodeId) != -1);
+}
+
+function showingChildren(nodeId) {
+    return (childrenShown.indexOf(nodeId) != -1);
 }
 
 // get children from database
@@ -109,16 +118,16 @@ function getChildren(nodeId) {
             console.log(errorThrown);
         }
     });
-    return resp; 
+    return resp;
 }
 
 // add children nodes as well as edges
 function addChildren(nodeId, children) {
 	try {
 		for (var i = children.length - 1; i >= 0; i--) {
-            if (nodes.getIds().indexOf(children[i]['id']) == -1) {
+            if (nodes.get(children[i]['id']) === null) {
                 children[i]["color"] = colorSet["original"];
-                nodes.add(children[i]);                
+                nodes.add(children[i]);
             };
             edges.add({
               id: nodeId.toString() + "to" + children[i]['id'].toString(),
@@ -156,12 +165,12 @@ function neighbourhoodHighlight(params) {
 	    	allNodes[nodeId].color = colorSet["unselected"];
             //allNodes[nodeId].color = undefined;
             if (allNodes[nodeId].hiddenLabel === undefined) {
-             allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
-             allNodes[nodeId].label = undefined;
-         }
-     }
-     var connectedNodes = network.getConnectedNodes(selectedNode);
-     var allConnectedNodes = [];
+               allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+               allNodes[nodeId].label = undefined;
+           }
+       }
+       var connectedNodes = network.getConnectedNodes(selectedNode);
+       var allConnectedNodes = [];
 
 	    // get the second degree nodes
 	    for (i = 1; i < degrees; i++) {
@@ -191,11 +200,10 @@ function neighbourhoodHighlight(params) {
 		// the main node gets its own color and its label back.
 		allNodes[selectedNode].color = colorSet["highlight"];              
         if (allNodes[selectedNode].hiddenLabel !== undefined) {
-         allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
-         allNodes[selectedNode].hiddenLabel = undefined;
-     }
- }
- else if (highlightActive === true) {
+           allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+           allNodes[selectedNode].hiddenLabel = undefined;
+       }
+   } else if (highlightActive === true) {
 		// reset all nodes
 		for (var nodeId in allNodes) {
 			allNodes[nodeId].color = undefined;
@@ -221,6 +229,8 @@ function neighbourhoodHighlight(params) {
     catch (err) {
         alert(err);
     }
+    //console.log(allConnectedNodes.length);
+    //network.fit({nodes: updateArray});
 }
 
 // change unselected node color to selected (but does not do the other way around)
@@ -496,7 +506,6 @@ function insertSelectedNodeToArray(id, label) {
 }
 
 function addSelectedNode(data, callback) {
-  clearPopUp();  
   insertSelectedNodeToArray(data.id, data.label);
   // addToSelectedBox(data);
   createReminder(data.id, data.label);
@@ -513,7 +522,6 @@ function deleteSelectedNodeFromArray(id) {
 }
 
 function deleteSelectedNode(data, callback) {
-    clearPopUp();
     deleteSelectedNodeFromArray(data.id);
     //deleteFromSelectedBox(data);
     removeReminder(data.id)
@@ -523,20 +531,21 @@ function deleteSelectedNode(data, callback) {
 function showEditSelection(node, DOM) {
     // filling in the popup DOM elements
     document.getElementById('node-label').innerHTML = node.label;
-    var result = $.grep(selectedNodesArray, function(e){ return e.id === node.id; });
+    var selected = ($.grep(selectedNodesArray, function(e){ return e.id === node.id; }).length > 0);
     // set the pop up at the posisiton of the mouse
     /*var networkCanvasWidth = $("#network").width();
     var networkCanvasHeight = $("#network").height();*/
     $("#network-popUp").css("left", DOM["x"] + 5);
     $("#network-popUp").css("top", DOM["y"] + 5);
     
-    if (result.length > 0) {
+    if (selected) {
         document.getElementById('addButton').style.display = 'none';
         document.getElementById('deleteButton').style.display = 'inline';
         document.getElementById('deleteButton').onclick = function() {
             deleteSelectedNode(node, function() {
                 updateColorOfUserNewlySelectedNodes();
             });
+            clearPopUp();
         }
     } else {
         document.getElementById('addButton').style.display = 'inline';
@@ -545,40 +554,116 @@ function showEditSelection(node, DOM) {
             addSelectedNode(node, function() {
                 updateColorOfUserNewlySelectedNodes();
             });
+            clearPopUp();
         }
     }
     document.getElementById('cancelButton').onclick = function() {
         cancelEdit();
     }    
     document.getElementById('network-popUp').style.display = 'block';
-}
 
-// on click, show add or delete menu
-function hold(params) {
-    var nodeId = params.nodes[0];
-    if (nodeId != null) {        
-        selectedNode = nodes.get(nodeId);
-        var DOM = params["pointer"]["DOM"];
-        showEditSelection(selectedNode, DOM);
-    };
-}
-
-// on click, if node is selected, show children and hightlight 1st and 2nd layers of children, else hide popup
-function click(params) {
-    var nodeId = params.nodes[0];
-    if (nodeId == null) {
-        clearPopUp();
+    if (childrenShown.indexOf(node.id) !== -1) {
+        document.getElementById('expandButton').style.display = 'none';
+        document.getElementById('collapseButton').style.display = 'inline';
+        document.getElementById('collapseButton').onclick = function() {
+            collapseNode(node);
+            clearPopUp();
+        }
     } else {
-        /*focus(nodeId);*/
+        document.getElementById('expandButton').style.display = 'inline';
+        document.getElementById('collapseButton').style.display = 'none';
+        document.getElementById('expandButton').onclick = function() {
+            expandNode(node);
+            clearPopUp();
+        }
+    }
+}
+
+function collapseNode(node) {
+    var allEgdes = edges.get();
+    if (allEgdes.length > 0) {
+        for (var i = allEgdes.length - 1; i >= 0; i--) {
+            if (allEgdes[i].from === node.id) {
+                var flag = 0;
+                if ((!isWithChildren(allEgdes[i].to)) || showingChildren(allEgdes[i].to)) {
+                    var edgesConnectedToChild = network.getConnectedEdges(allEgdes[i].to);
+                    if (edgesConnectedToChild.length > 1) {
+                        for (var j = edgesConnectedToChild.length - 1; j >= 0; j--) {
+                            if (edgesConnectedToChild[j] ===  node.id.toString() + "to" +allEgdes[i].to.toString()) {                                
+                                flag = 1;
+                                break;
+                            } else if (edgesConnectedToChild[j].includes(allEgdes[i].to.toString())) {
+                                flag = 2;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (flag === 0) {
+                    var childId = allEgdes[i].to;
+                    var childToUpdate = nodes.get(childId);
+                    childToUpdate["hidden"] = true;
+                    nodes.update(childToUpdate);
+                    var edgeToUpdate = allEgdes[i];
+                    edgeToUpdate["hidden"] = true;
+                    edges.update(edgeToUpdate);
+                } else if (flag === 1) {
+                    var edgeToUpdate = allEgdes[i];
+                    edgeToUpdate["hidden"] = true;
+                    edges.update(edgeToUpdate);
+                }
+            };
+        };
+    };
+    var indexToRemove = childrenShown.indexOf(node.id);
+    if (indexToRemove > -1) {
+        childrenShown.splice(indexToRemove, 1);
+    }
+}
+
+function expandNode(node) {
+    var nodeId = node.id;
+    if (isWithChildren(nodeId)) {
+        var allEgdes = edges.get();
+        if (allEgdes.length > 0) {
+            for (var i = allEgdes.length - 1; i >= 0; i--) {
+                if (allEgdes[i].from === node.id) {
+                    if (edges.get(allEgdes[i].to.toString + "to" + node.id.toString) === null) {
+                        var childId = allEgdes[i].to;
+                        var childToUpdate = nodes.get(childId);
+                        childToUpdate["hidden"] = false;
+                        nodes.update(childToUpdate);
+                        var edgeToUpdate = allEgdes[i];
+                        edgeToUpdate["hidden"] = false;
+                        edges.update(edgeToUpdate);
+                    } else {
+                        var edgeToUpdate = allEgdes[i];
+                        edgeToUpdate["hidden"] = false;
+                        edges.update(edgeToUpdate);
+                    }
+                };
+            };
+        };
+    } else {
         if (nodes.get(nodeId)["label"] !== document.getElementById('node-label').innerHTML) {
             clearPopUp();
         }
         if (!isWithChildren(nodeId)) {
             showChildren(nodeId);
         };
-        neighbourhoodHighlight(params);        
     };
     updateColorOfUserNewlySelectedNodes();
+    childrenShown.push(nodeId);
+}
+
+// on click, show add or delete menu
+function click(params) {
+    var nodeId = params.nodes[0];
+    if (nodeId != null) {        
+        selectedNode = nodes.get(nodeId);
+        var DOM = params["pointer"]["DOM"];
+        showEditSelection(selectedNode, DOM);
+    };    
 }
 
 function doubleClick(params) {
@@ -586,6 +671,7 @@ function doubleClick(params) {
     if (nodeId != null) {
         focus(nodeId);
     }
+    neighbourhoodHighlight(params);    
 }
 
 // add node to selected box
@@ -643,7 +729,6 @@ function showGraphDraw(pageID, pageTitle) {
 
     network = new vis.Network(container, data, options);
     network.on("click", click);
-    network.on("hold", hold);
     network.on("doubleClick", doubleClick);
 
     // disable the browser default right click menu

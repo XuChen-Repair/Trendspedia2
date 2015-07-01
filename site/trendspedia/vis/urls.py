@@ -5,7 +5,7 @@ import vis.views
 
 urlpatterns = patterns('vis.views',
     url(r'^getAllPLs$', 'getAllPLs'),
-    url(r'^selectNodes$', 'selectNodes')
+    url(r'^getTweetsWithMultipleNodes$', 'getTweetsWithMultipleNodes')
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)

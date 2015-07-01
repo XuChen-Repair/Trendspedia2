@@ -141,16 +141,16 @@ $(document).ready(function() {
 	}
 
 	var getFollowingTwitter = function(query) {
-		console.log("getFollowingTwitter " + query);
+		// console.log("getFollowingTwitter " + query);
 		$.getJSON('../../twitter/getTweetsfromDB?query=' + query + '&pageID=' + pageID + "&result_type=recent&count=20&since_id=" + since_id, function(data) {
 			var tweets = [];
-			console.log("following batch of RAW new tweets:");
-			console.log(data);
+			// console.log("following batch of RAW new tweets:");
+			// console.log(data);
 			var proceed = true;
 			$.each(data, function(index, element) {
 				if(element._id == AllTweets[AllTweets.length - 1].id){
 					proceed = false;
-					console.log("Ignoring all tweets from " + element.text)
+					// console.log("Ignoring all tweets from " + element.text)
 				}
 				if(proceed){
 					tweets[index] = {};
