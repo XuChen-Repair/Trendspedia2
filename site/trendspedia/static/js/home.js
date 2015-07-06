@@ -228,7 +228,7 @@ $(document).ready(function() {
 			$(".mw-body").css("margin-left", 0);
 			return;
 		}
-		console.log(finalAPI);
+		// console.log(finalAPI);
 		$.getJSON(finalAPI, function(data) {
 			// Update html
 			console.log("wiki object:");
