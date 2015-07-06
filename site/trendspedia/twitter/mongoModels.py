@@ -1,4 +1,4 @@
-# Standard library import 
+# Standard library import
 import datetime
 
 # Third party library
@@ -8,9 +8,10 @@ from mongoengine import *
 from django.conf import settings
 
 # Connecto mongoDB instance
-connect(settings.MONGO_CONNECTION["database"])
-        #username=settings.MONGO_CONNECTION["username"],
-        #password=settings.MONGO_CONNECTION["password"])
+connect(settings.MONGO_CONNECTION["database"],
+	username=settings.MONGO_CONNECTION["username"],
+	password=settings.MONGO_CONNECTION["password"],
+	host=settings.MONGO_CONNECTION["host"])
 
 
 class TwitterUser(Document):
@@ -37,7 +38,7 @@ class TwitterUser(Document):
 class SimpleTweet(EmbeddedDocument):
     meta = {
         'indexes': [
-            {'fields': ['id'], 
+            {'fields': ['id'],
              'unique': True},
         ]
     }
@@ -95,13 +96,13 @@ class HotImage(Document):
     records = ListField()
 
 class Tweets(Document):
-    meta = { 
+    meta = {
         'indexes': [
             {'fields': ['id']},
             {'fields': ['pageID']},
             {'fields': ['createdAt']},
-        ]   
-    }   
+        ]
+    }
     createdAt = DateTimeField()
     pageID = StringField(required=True)
     id = StringField(max_length=100, primary_key=True)
@@ -119,13 +120,13 @@ class Tweets(Document):
     crawled = BooleanField(default=False)
 
 class Hot(Document):
-    meta = { 
+    meta = {
         'collection': 'hot',
         'allow_inheritance': False,
         'index_drop_dups': True,
         'indexes': [
             {'fields': ['pageID', 'url']},
-        ]   
+        ]
     }
     description = StringField()
     title = StringField()
