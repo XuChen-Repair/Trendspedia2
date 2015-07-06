@@ -15,7 +15,7 @@ from django.core.urlresolvers import reverse
 
 #new change
 import datetime
-
+from time import time
 
 from social_auth.models import UserSocialAuth # Social Authentication of popular services
 import requests # Requests library, simplifying http request
@@ -27,7 +27,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from wikipedia.views import JSONResponse
-from pymongo import Connection
+from pymongo import Connection, MongoClient
 from twitter.helper import Helper
 from bson import json_util
 
@@ -90,7 +90,7 @@ def search(request, queryType): #TEST-IGNORE
         channel.basic_publish(exchange='',
                               routing_key='tokens_queue',
                               body=queryType)
-        
+
         # Receive tokens generated
         channel.queue_declare(queue=queryType)
         method_frame, header_frame, token = channel.basic_get(queue=queryType)
@@ -104,7 +104,7 @@ def search(request, queryType): #TEST-IGNORE
 ##            user = UserSocialAuth.objects.filter(user=request.user).get()
 ##        except e:
 ##            return HttpResponse(code=401) # Using 401 Unauthorized as I couldn't find a better HTTP Response code.
-        
+
         # Get parameters
         params = request.GET
         return search_with_tokens(token, queryType, params)
@@ -123,8 +123,8 @@ def search_with_tokens(tokens, queryType, params):
     t = Twython(app_key=settings.TWITTER_CONSUMER_KEY,
         app_secret=settings.TWITTER_CONSUMER_SECRET,
         oauth_token=tokens['oauth_token'],
-        oauth_token_secret=tokens['oauth_token_secret'])    
-    
+        oauth_token_secret=tokens['oauth_token_secret'])
+
     # Obtain Twitter results using user's OAuth key
     if queryType == "search":
         params = params.copy()
@@ -192,8 +192,8 @@ def search_with_tokens(tokens, queryType, params):
 
 """Function-based view for the home page
 
-It checks requests' authentication, then find the suitable stored Twitter's 
-credential to get some user infomation and return them to the front end for 
+It checks requests' authentication, then find the suitable stored Twitter's
+credential to get some user infomation and return them to the front end for
 interface customization
 
 Wiki page rendered at the home page is done by using RESTful API defined by
@@ -205,7 +205,7 @@ def home(request, lang):
     # Login for Twitter user, might change for other services
     url = u'https://api.twitter.com/1.1/account/verify_credentials.json'
     # Get the home template
-    t = loader.get_template('main/home.html') 
+    t = loader.get_template('main/home.html')
 
     #pprint((request.user.social_auth.get().user.username))
     #pprint((request.user.is_authenticated()))
@@ -215,7 +215,7 @@ def home(request, lang):
         c = RequestContext(request, {})
         return HttpResponse(t.render(c))
 
-    # Else, try to setup an Oauth credential and connect to Twitter using 
+    # Else, try to setup an Oauth credential and connect to Twitter using
     # 'requests' library. CONSUMER_KEY and CONSUMER_SECRET are provided for
     # each application. oauth_token and oauth_token_secret are unique for each
     # user.
@@ -224,7 +224,7 @@ def home(request, lang):
         # Get user using Django-SocialAuth APINo docs for method like get(),...
         user = UserSocialAuth.objects.filter(user=request.user).get()
         if user.provider == "twitter":
-            oauth = OAuth1(unicode(settings.TWITTER_CONSUMER_KEY), 
+            oauth = OAuth1(unicode(settings.TWITTER_CONSUMER_KEY),
                         unicode(settings.TWITTER_CONSUMER_SECRET),
                         unicode(user.tokens['oauth_token']),
                         unicode(user.tokens['oauth_token_secret']),
@@ -258,7 +258,7 @@ def getEvents(request, topic):
     helper = Helper()
     import codecs, re
 
-    con = Connection()
+    con = MongoClient('{username}:{password}@{host}'.format(**settings.MONGO_CONNECTION))
     db = con['cs3281']
     wikiCol = db['wiki_article']
     wordPattern = re.compile(r'[\w]+')
@@ -267,7 +267,7 @@ def getEvents(request, topic):
     #print "I am here!"
     wordSet = set()
     for doc in wikiCol.find():
-        if 'pageTitle' in doc:        
+        if 'pageTitle' in doc:
             title = doc['pageTitle']
             wordlist = re.findall(wordPattern, title.lower())
             for word in wordlist:
@@ -276,7 +276,7 @@ def getEvents(request, topic):
 
     fwp = codecs.open(title_file, 'w', 'utf-8')
     for word in wordSet:
-        fwp.write( "%s\n" % (word) )      
+        fwp.write( "%s\n" % (word) )
     fwp.close()
     import datetime
     import codecs, re
@@ -287,7 +287,7 @@ def getEvents(request, topic):
     tweet_file = './tweet.txt'
     #min_time = datetime.datetime.max
     #max_time = datetime.datetime.min
-    titleSet = set() # The set of titles of wiki articles 
+    titleSet = set() # The set of titles of wiki articles
     wordSet = set() # To keep all the keywords in the tweet collection
     wordPattern = re.compile(r'[\w]+')
 
@@ -316,14 +316,14 @@ def getEvents(request, topic):
             max_time = create_time if create_time > max_time else max_time
             timeString = create_time.strftime(ISOTIMEFORMAT)
             fwp.write(timeString)
-            
+
             text = doc['text']
             wordlist = re.findall(wordPattern, text.lower())
             for word in wordlist:
                 #if word in titleSet:
                     wordSet.add( word )
                     fwp.write(" %s" % word)
-            
+
             fwp.write("\n")
             cnt += 1
             if cnt % 10000 == 0:
@@ -373,7 +373,7 @@ def getEvents(request, topic):
 
         day_weight_list = []
 
-        
+
 
         def __init__(self, stopword_file):
 
@@ -383,7 +383,7 @@ def getEvents(request, topic):
 
                     self.stopwords.add( line.strip() )
 
-            
+
 
 
         def get_top_K_events(self, tweets, alpha, K, N):
@@ -414,12 +414,12 @@ def getEvents(request, topic):
                 actual_date = datetime.date(2014, 10, 15) + datetime.timedelta(days=day)
                 actual_date_string = actual_date.strftime("%Y-%m-%d")
                 result.append( (actual_date_string, weight, word_list) )
-                
-            #pirint "result = ", result
-            
-            return sorted(result, key = get_date, reverse = True) 
 
-        
+            #pirint "result = ", result
+
+            return sorted(result, key = get_date, reverse = True)
+
+
 
         def initialize_days(self):
 
@@ -432,13 +432,13 @@ def getEvents(request, topic):
 
             self.day_weight_list = [0] * self.day_number
 
-                
+
 
         def update_days(self, tweets):
 
             #print tweets
             for tweet in tweets:
-            
+
                 #print tweet
 
                 time_string = re.search(self.time_pattern, tweet).group()
@@ -483,7 +483,7 @@ def getEvents(request, topic):
 
             return sort_list[:K]
 
-            
+
 
         def findMaxBurst(self):
 
@@ -497,13 +497,13 @@ def getEvents(request, topic):
 
             return maxBurst
 
-        
+
 
         def getMaxDay(self):
 
             return self.day_number
 
-        
+
 
         def get_weight(self, day, maxBurst, maxDay, alpha):
 
@@ -537,7 +537,7 @@ def hotMaterials(request):
         }
         #print result
         #return HttpResponse(json.dumps(queryResults), mimetype="application/json")
-        return helper.jsonp(request, result)		
+        return helper.jsonp(request, result)
 
 '''
 def hotImage(request):
@@ -596,16 +596,22 @@ def hotImage(request):
 import pymongo
 # tweets from mongoDB
 def getTweetsfromDB(request):
-    con = Connection()
+    con = MongoClient('mongodb://{username}:{password}@{host}:{port}/{database}'.format(**settings.MONGO_CONNECTION))
     db = con['cs3281']
     tweetsDB = db['tweets']
     params = request.GET
-    print "params = "
-    print params
+    # print "params = "
+    # print params
+
+    #timing variables
+    start_time = 0
+    priority_time = 0
+    querying_time = 0
 
     if params.get('pageID') and params.get('query'):
         # Insert query into Topic DB if does not exist, if exist then
         # update priority to 1
+        start_time = time()
         topic = db['topics'].find_one({"pageID": params['pageID']})
         if topic is None:
             topic = {}
@@ -622,6 +628,7 @@ def getTweetsfromDB(request):
                     "sinceID": params.get('since_id')
                 }
             })
+        priority_time = time() - start_time
     query = {}
     if params.get('pageID'):
         query['pageID'] = params.get('pageID')
@@ -633,6 +640,7 @@ def getTweetsfromDB(request):
                 "$box": [sw, ne]
             }
         }
+
     if params.get('before') or params.get('after'):
         dateFmt = '%Y-%m-%dT%H:%M:%S.%fZ'
         query['createdAt'] = {}
@@ -641,11 +649,19 @@ def getTweetsfromDB(request):
         if params.get('after'):
             query['createdAt']['$gt'] = datetime.datetime.strptime(params.get('after'),dateFmt)
 
+    start_time = time()
     DBresults = tweetsDB.find(query).limit(100).sort('createdAt', pymongo.DESCENDING)
+    querying_time = time() - start_time
 
+    start_time = time()
     resultList = []
     for DBresult in DBresults:
         resultList.append(DBresult)
+    appending_time = time() - start_time
 
+    start_time = time()
     jsonList = json.dumps(resultList ,default=json_util.default)
+    json_time = time() - start_time
+
+    print ":>> {0}, {1}, {2}, {3}".format(priority_time, querying_time, appending_time, json_time)
     return HttpResponse(jsonList)

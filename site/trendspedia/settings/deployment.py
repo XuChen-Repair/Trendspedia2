@@ -8,10 +8,14 @@ BROKER_URL = 'amqp://guest:guest@localhost:5672/'
 
 MONGO_CONNECTION = {
     'database': 'cs3281',
+    'username': 'cs3281',
+    'password': 'cs3281',
+    'host': '127.0.0.1',
+    'port':27017
 }
 
 ALLOWED_HOSTS = ['*']
-DATABASES = { 
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'cs3281',                      # Or path to database file if using sqlite3.
@@ -19,7 +23,7 @@ DATABASES = {
         'PASSWORD': 'cs3281',                  # Not used with sqlite3.
         'HOST': '127.0.0.1',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-    },  
+    },
 }
 
 COVERAGE_CODE_EXCLUDES = getattr(settings, 'COVERAGE_CODE_EXCLUDES',[
