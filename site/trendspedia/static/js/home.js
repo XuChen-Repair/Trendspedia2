@@ -251,7 +251,7 @@ $(document).ready(function() {
 
 			/*load hot materials*/
 			$.getJSON("../../twitter/hotMaterials?pageID=" + pageID, function(data) {
-				console.log("hot meterials === ", data);
+				// console.log("hot meterials === ", data);
 				hotMaterials = data.hotMaterials;
 				while(MaterialCount < materialLoadAmount){
 					if(MaterialCount <= hotMaterials.length - 1){
@@ -377,11 +377,11 @@ $(document).ready(function() {
 	var showGraph = function(pageID, pageTitle) {
 		handleDeleteButton();
 		// call function initializing the graph (in vis helper.js)
-		if (withChildren.length === 0) {
-			showGraphDraw(pageID, pageTitle);
-		} else {
-			console.log("redraw");
+		if (nodes !== undefined) {
 			showGraphRedraw();
+			console.log("redraw");
+		} else {
+			showGraphDraw(pageID, pageTitle);
 		}
 	}
 

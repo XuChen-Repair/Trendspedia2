@@ -13,6 +13,8 @@ on main canvas, when double click, collapse the node.
 /* 
 node represent a wikipedia page, node-id being page_id
 directed edge showing the pagelink relationship, edge id being a string with format: fromId.toString() + "to" + toId.toString()
+nodes.childrenShown: -1 children completely hidden, 0 children partially hidden, 1 children all shown.
+nodes.hasChildren: undefined before querying children. After querying for children from DB, set to 1 if have children and 0 if not.
 */
 
 var nodes, edges, network;
@@ -43,15 +45,6 @@ var colorSet = {
 };
 
 var options = {
-    // nodes : {
-    //     shape: 'text'
-    // },
-    /*edges: {
-        smooth: {
-            type: "continuous",
-            roundness: 0.2
-        }
-    },*/
     physics:{
         enabled: true,
         barnesHut: {
@@ -74,35 +67,7 @@ var options = {
         },
         timestep: 0.5
     }
-
-/*    physics: {
-    forceAtlas2Based: {
-        gravitationalConstant: -100,
-        centralGravity: 0.2,
-        springLength: 100,
-        springConstant: 0.1,
-        damping: 0.6,
-        avoidOverlap: 0.00
-    },
-    solver: "forceAtlas2Based",
-    maxVelocity: 50,
-    minVelocity: 0.2,
-    stabilization: {
-        enabled: true,
-        iterations: 100,
-        updateInterval: 10,
-        onlyDynamicEdges: false,
-        fit: true
-    },
-        timestep: 0.5
-    }*/
 }
-
-// Nodes whose children is already loaded 
-var withChildren = [];
-
-// Nodes whose children is shown in the graph
-var childrenShown = [];
 
 // User selected nodes
 var selectedNodesArray = [];
@@ -114,11 +79,7 @@ function toJSONString(obj) {
 
 // return if a node's children is alreay loaded. boolean returned.
 function isWithChildren(nodeId) {
-	return (withChildren.indexOf(nodeId) != -1);
-}
-
-function showingChildren(nodeId) {
-    return (childrenShown.indexOf(nodeId) != -1);
+	return nodes.get(nodeId)["hasChildren"] !== undefined;
 }
 
 // get children from database
@@ -130,20 +91,24 @@ function getChildren(nodeId) {
         async: false,
         url: "/vis/getAllPLs?pageID=" + nodeId.toString(), 
         success: function( data ) {
-            var nodes = [];
+            var nodesToReturn = [];
             var pagelinks = JSON.parse(data);
+            var nodeToUpdate = nodes.get(nodeId);
             if (pagelinks.length > 0) {
+                nodeToUpdate["hasChildren"] = 1;
                 for (var i = 0; i < pagelinks.length; i++) {
                     pagelink = pagelinks[i]
-                    node = {
+                    nodeToReturn = {
                         id: pagelink[0],
                         label: pagelink[1]
                     };
-                    nodes.push(node);
+                    nodesToReturn.push(nodeToReturn);
                 }
+            } else {
+                nodeToUpdate["hasChildren"] = 0;
             }
-            getChildrenFlag = true;
-            resp = nodes;
+            nodes.update(nodeToUpdate);
+            resp = nodesToReturn;
         },
         error: function (xhr, textStatus, errorThrown) {
             console.log(errorThrown);
@@ -158,13 +123,15 @@ function addChildren(nodeId, children) {
 		for (var i = children.length - 1; i >= 0; i--) {
             if (nodes.get(children[i]['id']) === null) {
                 children[i]["color"] = colorSet["original"];
+                children[i]["childrenShown"] = -1;
                 nodes.add(children[i]);
-            };
+            }
+
             edges.add({
               id: nodeId.toString() + "to" + children[i]['id'].toString(),
               from: nodeId,
               to: children[i]['id']
-          });
+            });
         };
     }
     catch (err) {
@@ -178,15 +145,12 @@ function showChildren(nodeId) {
 	if (children.length > 0) {
 		addChildren(nodeId, children);
 	};
-    withChildren.push(nodeId);
 }
 
 // highlight first and second layers of neibors
 function neighbourhoodHighlight(params) {
 	allNodes = nodes.get({returnType:"Object"});
-    // var fitArrayIds = [];
 
-    // if something is selected:
     if (params.nodes.length > 0) {
         var selectedNode = params.nodes[0];
         var options = {
@@ -205,6 +169,7 @@ function neighbourhoodHighlight(params) {
 
 	    // mark all nodes as hard to read.
 	    for (var nodeId in allNodes) {
+            //allNodes[nodeId].hidden = true;
 	    	allNodes[nodeId].color = colorSet["unselected"];
             //allNodes[nodeId].color = undefined;
             if (allNodes[nodeId].hiddenLabel === undefined) {
@@ -221,8 +186,6 @@ function neighbourhoodHighlight(params) {
 	    		allConnectedNodes = allConnectedNodes.concat(network.getConnectedNodes(connectedNodes[j]));
 	    	}
 	    }
-
-        // fitArrayIds = allConnectedNodes;
 
 	    // all second degree nodes get a different color and their label back
 	    for (i = 0; i < allConnectedNodes.length; i++) {            
@@ -248,7 +211,7 @@ function neighbourhoodHighlight(params) {
            allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
            allNodes[selectedNode].hiddenLabel = undefined;
        }
-   } else if (highlightActive === true) {
+    } else if (highlightActive === true) {
 		// reset all nodes
 		for (var nodeId in allNodes) {
 			allNodes[nodeId].color = undefined;
@@ -274,11 +237,6 @@ function neighbourhoodHighlight(params) {
     catch (err) {
         alert(err);
     }
-    // console.log(fitArrayIds);
-    // network.fit({
-    //     nodes: fitArrayIds,
-    //     animation: true
-    // });
 }
 
 // change unselected node color to selected (but does not do the other way around)
@@ -296,23 +254,11 @@ function updateColorOfUserSelectedNodes() {
     }
 }
 
-// focus on a node with animation
-/*function focus(nodeId) {
-	var options = {
-        // position: {x:positionx,y:positiony}, // this is not relevant when focusing on nodes
-        scale: 1.0,
-        offset: {x:0, y:0},
-        animation: {
-        	duration: 500,
-        	easingFunction: "easeInOutQuad"
-        }
-    };
-    network.focus(nodeId, options);
-}*/
-
 function clearPopUp() {
   document.getElementById('addButton').onclick = null;
   document.getElementById('deleteButton').onclick = null;
+  document.getElementById('expandButton').onclick = null;
+  document.getElementById('collapseButton').onclick = null;
   document.getElementById('cancelButton').onclick = null;
   document.getElementById('network-popUp').style.display = 'none';
 }
@@ -360,22 +306,22 @@ var editReminder = function(id){
             if(!newcontent) {
                 var confirmation = confirm('Delete this item?');
                 if(confirmation) {
-                  removeReminder(id);
-              }
-          }
-          else{
-            localStorage.setItem(id, newcontent);
-            saved.show();
-            setTimeout(function(){
-                saved.hide();
-            },2000);
-            $(this).remove();
-            $('.icon-pencil').show();
+                    removeReminder(id);
+                }
+            }
+            else{
+                localStorage.setItem(id, newcontent);
+                saved.show();
+                setTimeout(function(){
+                    saved.hide();
+                },2000);
+                $(this).remove();
+                $('.icon-pencil').show();
+            }
+
         }
 
-    }
-
-}));
+    }));
 };
 
 //removes item from localStorage
@@ -414,7 +360,7 @@ var removeReminder = function(id){
     deleteReminder(id);
     // delete from selectedNodesArray
     deleteSelectedNodeFromArray(id)
-    //add undo option only if the edited item is not empty
+    // add undo option only if the edited item is not empty
 
     unselectedNodeColorUpdate(id);
 
@@ -498,7 +444,7 @@ var createReminder = function(id, content, index){
     }
 };
 
-//handler for input
+// handler for input
 var handleInput = function(){
     $('#input-form').on('submit', function(event){
         var input = $('#text'),
@@ -557,7 +503,7 @@ function addSelectedNode(data, callback) {
   insertSelectedNodeToArray(data.id, data.label);
   // addToSelectedBox(data);
   createReminder(data.id, data.label);
-  callback.apply(this,[]);  
+  callback.apply(this,[]);
 }
 
 function deleteSelectedNodeFromArray(id) {
@@ -577,6 +523,7 @@ function deleteSelectedNode(data, callback) {
 }
 
 function showEditSelection(node, DOM) {
+    
     // filling in the popup DOM elements
     document.getElementById('node-label').innerHTML = node.label;
     var selected = ($.grep(selectedNodesArray, function(e){ return e.id === node.id; }).length > 0);
@@ -607,71 +554,99 @@ function showEditSelection(node, DOM) {
     }
     document.getElementById('cancelButton').onclick = function() {
         cancelEdit();
-    }    
-    document.getElementById('network-popUp').style.display = 'block';
-
-    if (childrenShown.indexOf(node.id) !== -1) {
-        document.getElementById('expandButton').style.display = 'none';
-        document.getElementById('collapseButton').style.display = 'inline';
-        document.getElementById('collapseButton').onclick = function() {
-            collapseNode(node);
-            clearPopUp();
-        }
-    } else {
-        document.getElementById('expandButton').style.display = 'inline';
-        document.getElementById('collapseButton').style.display = 'none';
-        document.getElementById('expandButton').onclick = function() {
-            expandNode(node);
-            clearPopUp();
-        }
     }
+    
+    if (node["hasChildren"] === 1 || node["hasChildren"] === undefined) {        
+        if (node["childrenShown"] === 1) {
+            document.getElementById('expandButton').style.display = 'none';
+            document.getElementById('collapseButton').style.display = 'inline';            
+            document.getElementById('collapseButton').onclick = function() {
+                collapseNode(node);
+                clearPopUp();
+            };
+        } else if (node["childrenShown"] === -1) {
+            document.getElementById('expandButton').style.display = 'inline';
+            document.getElementById('collapseButton').style.display = 'none';
+            document.getElementById('expandButton').onclick = function() {
+                expandNode(node);
+                clearPopUp();
+            };
+        } else if (node["childrenShown"] === 0) {
+            document.getElementById('expandButton').style.display = 'inline';
+            document.getElementById('collapseButton').style.display = 'inline';
+            document.getElementById('collapseButton').onclick = function() {
+                collapseNode(node);
+                clearPopUp();
+            };
+            document.getElementById('expandButton').onclick = function() {
+                expandNode(node);
+                clearPopUp();
+            };
+        }        
+    } else {
+        document.getElementById('expandButton').style.display = 'none';
+        document.getElementById('collapseButton').style.display = 'none';
+    }
+
+    document.getElementById('network-popUp').style.display = 'block';
 }
 
 function collapseNode(node) {
     var allEgdes = edges.get();
-    var branchLeftFlag = 0;
+    var branchLeftFlag = false;
+    var branchFoldedFlag = false;
 
     for (var i = 0; i < allEgdes.length; i++) {
-        if (allEgdes[i].from === node.id) {
+        if (allEgdes[i].from == node.id) {
             var flag = 0;
-            var childIdToUpdate = allEgdes[i].to;
-            if (isWithChildren(childIdToUpdate) && showingChildren(childIdToUpdate)) {
-                var edgesConnectedToChild = network.getConnectedEdges(childIdToUpdate);
-                for (var j = edgesConnectedToChild.length - 1; j >= 0; j--) {
-                    if (edgesConnectedToChild[j] ===  node.id.toString() + "to" + childIdToUpdate.toString()) {
-                        flag = 1;
-                        break;
-                    } else {
-                        if (edgesConnectedToChild[j].includes(childIdToUpdate.toString())) {
-                            flag = 2;
-                            branchLeftFlag = 1;
-                            break;
-                        }
-                    }
-                }
-            }
-            var childToUpdate = nodes.get(childIdToUpdate);
+            var childToUpdate = nodes.get(allEgdes[i].to);            
             var edgeToUpdate = allEgdes[i];
-            
+            var edgesConnectedToChild = network.getConnectedEdges(allEgdes[i].to);
+            if (edgesConnectedToChild.length > 1) {
+                var edgeFromCentralToChildFlag = false;
+                var edgeFromChildToCentralFlag = false;
+                var connectedToOtherNodes = false;
+                for (var j = edgesConnectedToChild.length - 1; j >= 0; j--) {
+                    if (edgesConnectedToChild[j] == node.id + "to" + allEgdes[i].to && edges.get(edgesConnectedToChild[j])["hidden"] !== true) {
+                        edgeFromCentralToChildFlag = true;
+                    } else if (edgesConnectedToChild[j] == allEgdes[i].to + "to" + node.id && edges.get(edgesConnectedToChild[j])["hidden"] !== true) {
+                        edgeFromChildToCentralFlag = true;
+                    } else if (edgesConnectedToChild[j].includes(allEgdes[i].to) && edges.get(edgesConnectedToChild[j])["hidden"] !== true) {                       
+                        connectedToOtherNodes = true;
+                    }
+                };
+
+                if (edgeFromChildToCentralFlag && edgeFromCentralToChildFlag) {
+                    flag = 1;
+                } else if (connectedToOtherNodes) {
+                    flag = 2;
+                }
+            };
             if (flag === 0) {
                 childToUpdate["hidden"] = true;
                 nodes.update(childToUpdate);
-                
                 edgeToUpdate["hidden"] = true;
                 edges.update(edgeToUpdate);
+                branchFoldedFlag = true;
             } else if (flag === 1) {
                 edgeToUpdate["hidden"] = true;
                 edges.update(edgeToUpdate);
+                branchFoldedFlag = true;
+            } else {
+                branchLeftFlag = true;
             }
         };
     };
 
-    if (branchLeftFlag === 0) {
-        var indexToRemove = childrenShown.indexOf(node.id);
-        if (indexToRemove > -1) {
-            childrenShown.splice(indexToRemove, 1);
-        }
-    };
+    if (!branchFoldedFlag) {
+        node["childrenShown"] = 1;
+    } else if (branchLeftFlag) {
+        node["childrenShown"] = 0;
+    } else {
+        node["childrenShown"] = -1;
+    }
+
+    nodes.update(node);
 }
 
 function expandNode(node) {
@@ -680,7 +655,7 @@ function expandNode(node) {
         var allEgdes = edges.get();
         if (allEgdes.length > 0) {
             for (var i = allEgdes.length - 1; i >= 0; i--) {
-                if (allEgdes[i].from === node.id) {
+                if (allEgdes[i].from == nodeId) {
                     if (edges.get(allEgdes[i].to.toString + "to" + node.id.toString) === null) {
                         var childId = allEgdes[i].to;
                         var childToUpdate = nodes.get(childId);
@@ -700,24 +675,23 @@ function expandNode(node) {
     } else {
         if (nodes.get(nodeId)["label"] !== document.getElementById('node-label').innerHTML) {
             clearPopUp();
-        }
-        if (!isWithChildren(nodeId)) {
-            showChildren(nodeId);
-        };
+        }        
+        showChildren(nodeId);        
     };
     updateColorOfUserSelectedNodes();
-    childrenShown.push(nodeId);
+    node["childrenShown"] = 1;
+    nodes.update(node);
 }
 
 // on click, show add or delete menu
 function click(params) {
+    reverseNeighbourhoodHighlight();
     var nodeId = params.nodes[0];
-    if (nodeId != null) {        
+    if (nodeId != null) {
         selectedNode = nodes.get(nodeId);
         var DOM = params["pointer"]["DOM"];
         showEditSelection(selectedNode, DOM);
-    };
-    reverseNeighbourhoodHighlight();
+    };    
 }
 
 function reverseNeighbourhoodHighlight() {
@@ -732,14 +706,6 @@ function reverseNeighbourhoodHighlight() {
     nodes.update(allNodes);
     updateColorOfUserSelectedNodes();
 }
-
-/*function doubleClick(params) {
-    var nodeId = params.nodes[0];
-    if (nodeId != null) {
-        focus(nodeId);
-    }
-    neighbourhoodHighlight(params);
-}*/
 
 // add node to selected box
 function addToSelectedBox(data) {
@@ -767,7 +733,6 @@ function deleteFromSelectedBox(data) {
 }
 
 function showGraphDraw(pageID, pageTitle) {
-    withChildren = [];
     var windowHeight = window.innerHeight;
     $("#network").css("height", windowHeight);
     $("#selected").css("height", windowHeight);
@@ -779,7 +744,8 @@ function showGraphDraw(pageID, pageTitle) {
     {
         id: pageID,
         label: pageTitle, 
-        color: colorSet["original"]
+        color: colorSet["original"],
+        childrenShown: -1
     }
     ]);
 
@@ -812,7 +778,8 @@ function showGraphRedraw() {
                 nodes.update({
                     id: currentNode.id,
                     label: currentNode.label, 
-                    color: undefined
+                    color: undefined,
+                    childrenShown: -1
                 });
             }
         };
