@@ -141,16 +141,16 @@ $(document).ready(function() {
 	}
 
 	var getFollowingTwitter = function(query) {
-		console.log("getFollowingTwitter " + query);
+		// console.log("getFollowingTwitter " + query);
 		$.getJSON('../../twitter/getTweetsfromDB?query=' + query + '&pageID=' + pageID + "&result_type=recent&count=20&since_id=" + since_id, function(data) {
 			var tweets = [];
-			console.log("following batch of RAW new tweets:");
-			console.log(data);
+			// console.log("following batch of RAW new tweets:");
+			// console.log(data);
 			var proceed = true;
 			$.each(data, function(index, element) {
 				if(element._id == AllTweets[AllTweets.length - 1].id){
 					proceed = false;
-					console.log("Ignoring all tweets from " + element.text)
+					// console.log("Ignoring all tweets from " + element.text)
 				}
 				if(proceed){
 					tweets[index] = {};
@@ -228,7 +228,7 @@ $(document).ready(function() {
 			$(".mw-body").css("margin-left", 0);
 			return;
 		}
-		console.log(finalAPI);
+		// console.log(finalAPI);
 		$.getJSON(finalAPI, function(data) {
 			// Update html
 			console.log("wiki object:");
@@ -251,7 +251,7 @@ $(document).ready(function() {
 
 			/*load hot materials*/
 			$.getJSON("../../twitter/hotMaterials?pageID=" + pageID, function(data) {
-				console.log("hot meterials === ", data);
+				// console.log("hot meterials === ", data);
 				hotMaterials = data.hotMaterials;
 				while(MaterialCount < materialLoadAmount){
 					if(MaterialCount <= hotMaterials.length - 1){
@@ -377,11 +377,11 @@ $(document).ready(function() {
 	var showGraph = function(pageID, pageTitle) {
 		handleDeleteButton();
 		// call function initializing the graph (in vis helper.js)
-		if (withChildren.length === 0) {
-			showGraphDraw(pageID, pageTitle);
-		} else {
-			console.log("redraw");
+		if (nodes !== undefined) {
 			showGraphRedraw();
+			console.log("redraw");
+		} else {
+			showGraphDraw(pageID, pageTitle);
 		}
 	}
 

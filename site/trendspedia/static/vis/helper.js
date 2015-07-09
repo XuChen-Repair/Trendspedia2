@@ -13,9 +13,13 @@ on main canvas, when double click, collapse the node.
 /* 
 node represent a wikipedia page, node-id being page_id
 directed edge showing the pagelink relationship, edge id being a string with format: fromId.toString() + "to" + toId.toString()
+nodes.childrenShown: -1 children completely hidden, 0 children partially hidden, 1 children all shown.
+nodes.hasChildren: undefined before querying children. After querying for children from DB, set to 1 if have children and 0 if not.
 */
 
 var nodes, edges, network;
+
+var highlightActive = false;
 
 var colorSet = {
     "highlight": {
@@ -41,32 +45,32 @@ var colorSet = {
 };
 
 var options = {
-  physics:{
-    enabled: true,
-    barnesHut: {
-      gravitationalConstant: -2000,
-      centralGravity: 0.3,
-      springLength: 100,
-      springConstant: 0.15,
-      damping: 0.75,
-      avoidOverlap: 0
+    edges:{
+        arrows: 'to'
     },
-    maxVelocity: 45,
-    minVelocity: 0.1,
-    solver: 'barnesHut',
-    stabilization: {
-      enabled: true,
-      iterations: 1000,
-      updateInterval: 100,
-      onlyDynamicEdges: false,
-      fit: true
-    },
-    timestep: 0.5
-  }
+    physics:{
+        enabled: true,
+        barnesHut: {
+            gravitationalConstant: -3000,
+            centralGravity: 0.25,
+            springLength: 150,
+            springConstant: 0.15,
+            damping: 0.6,
+            avoidOverlap: 0
+        },
+        maxVelocity: 50,
+        minVelocity: 0.2,
+        solver: 'barnesHut',
+        stabilization: {
+            enabled: true,
+            iterations: 1000,
+            updateInterval: 100,
+            onlyDynamicEdges: false,
+            fit: true
+        },
+        timestep: 0.5
+    }
 }
-
-// Nodes whose children is already loaded 
-var withChildren = [];
 
 // User selected nodes
 var selectedNodesArray = [];
@@ -78,7 +82,7 @@ function toJSONString(obj) {
 
 // return if a node's children is alreay loaded. boolean returned.
 function isWithChildren(nodeId) {
-	return (withChildren.indexOf(nodeId) != -1);
+	return nodes.get(nodeId)["hasChildren"] !== undefined;
 }
 
 // get children from database
@@ -90,41 +94,47 @@ function getChildren(nodeId) {
         async: false,
         url: "/vis/getAllPLs?pageID=" + nodeId.toString(), 
         success: function( data ) {
-            var nodes = [];
+            var nodesToReturn = [];
             var pagelinks = JSON.parse(data);
+            var nodeToUpdate = nodes.get(nodeId);
             if (pagelinks.length > 0) {
+                nodeToUpdate["hasChildren"] = 1;
                 for (var i = 0; i < pagelinks.length; i++) {
                     pagelink = pagelinks[i]
-                    node = {
+                    nodeToReturn = {
                         id: pagelink[0],
                         label: pagelink[1]
                     };
-                    nodes.push(node);
+                    nodesToReturn.push(nodeToReturn);
                 }
+            } else {
+                nodeToUpdate["hasChildren"] = 0;
             }
-            getChildrenFlag = true;
-            resp = nodes;
+            nodes.update(nodeToUpdate);
+            resp = nodesToReturn;
         },
         error: function (xhr, textStatus, errorThrown) {
             console.log(errorThrown);
         }
     });
-    return resp; 
+    return resp;
 }
 
 // add children nodes as well as edges
 function addChildren(nodeId, children) {
 	try {
 		for (var i = children.length - 1; i >= 0; i--) {
-            if (nodes.getIds().indexOf(children[i]['id']) == -1) {
+            if (nodes.get(children[i]['id']) === null) {
                 children[i]["color"] = colorSet["original"];
-                nodes.add(children[i]);                
-            };
+                children[i]["childrenShown"] = -1;
+                nodes.add(children[i]);
+            }
+
             edges.add({
               id: nodeId.toString() + "to" + children[i]['id'].toString(),
               from: nodeId,
               to: children[i]['id']
-          });
+            });
         };
     }
     catch (err) {
@@ -138,30 +148,40 @@ function showChildren(nodeId) {
 	if (children.length > 0) {
 		addChildren(nodeId, children);
 	};
-    withChildren.push(nodeId);
 }
 
 // highlight first and second layers of neibors
 function neighbourhoodHighlight(params) {
 	allNodes = nodes.get({returnType:"Object"});
-    // if something is selected:
+
     if (params.nodes.length > 0) {
+        var selectedNode = params.nodes[0];
+        var options = {
+            scale: 1.0,
+            offset: {x:0, y:0},
+            animation: {
+                duration: 500,
+                easingFunction: "easeInOutQuad"
+            }
+        };
+        network.focus(selectedNode, options);
+
     	highlightActive = true;
     	var i,j;
-    	var selectedNode = params.nodes[0];
     	var degrees = 2;
 
 	    // mark all nodes as hard to read.
 	    for (var nodeId in allNodes) {
+            //allNodes[nodeId].hidden = true;
 	    	allNodes[nodeId].color = colorSet["unselected"];
             //allNodes[nodeId].color = undefined;
             if (allNodes[nodeId].hiddenLabel === undefined) {
-             allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
-             allNodes[nodeId].label = undefined;
-         }
-     }
-     var connectedNodes = network.getConnectedNodes(selectedNode);
-     var allConnectedNodes = [];
+               allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+               allNodes[nodeId].label = undefined;
+           }
+       }
+       var connectedNodes = network.getConnectedNodes(selectedNode);
+       var allConnectedNodes = [];
 
 	    // get the second degree nodes
 	    for (i = 1; i < degrees; i++) {
@@ -171,7 +191,7 @@ function neighbourhoodHighlight(params) {
 	    }
 
 	    // all second degree nodes get a different color and their label back
-	    for (i = 0; i < allConnectedNodes.length; i++) {
+	    for (i = 0; i < allConnectedNodes.length; i++) {            
 	    	allNodes[allConnectedNodes[i]].color = colorSet["2ndDegreeChild"];
 	    	if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
 	    		allNodes[allConnectedNodes[i]].label = allNodes[allConnectedNodes[i]].hiddenLabel;
@@ -191,11 +211,10 @@ function neighbourhoodHighlight(params) {
 		// the main node gets its own color and its label back.
 		allNodes[selectedNode].color = colorSet["highlight"];              
         if (allNodes[selectedNode].hiddenLabel !== undefined) {
-         allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
-         allNodes[selectedNode].hiddenLabel = undefined;
-     }
- }
- else if (highlightActive === true) {
+           allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+           allNodes[selectedNode].hiddenLabel = undefined;
+       }
+    } else if (highlightActive === true) {
 		// reset all nodes
 		for (var nodeId in allNodes) {
 			allNodes[nodeId].color = undefined;
@@ -224,7 +243,7 @@ function neighbourhoodHighlight(params) {
 }
 
 // change unselected node color to selected (but does not do the other way around)
-function updateColorOfUserNewlySelectedNodes() {
+function updateColorOfUserSelectedNodes() {
     try {
         for(var i = 0; i < selectedNodesArray.length; i++) {
             nodes.update({
@@ -238,23 +257,11 @@ function updateColorOfUserNewlySelectedNodes() {
     }
 }
 
-// focus on a node with animation
-function focus(nodeId) {
-	var options = {
-        // position: {x:positionx,y:positiony}, // this is not relevant when focusing on nodes
-        scale: 1.0,
-        offset: {x:0, y:0},
-        animation: {
-        	duration: 500,
-        	easingFunction: "easeInOutQuad"
-        }
-    };
-    network.focus(nodeId, options);
-}
-
 function clearPopUp() {
   document.getElementById('addButton').onclick = null;
   document.getElementById('deleteButton').onclick = null;
+  document.getElementById('expandButton').onclick = null;
+  document.getElementById('collapseButton').onclick = null;
   document.getElementById('cancelButton').onclick = null;
   document.getElementById('network-popUp').style.display = 'none';
 }
@@ -302,22 +309,22 @@ var editReminder = function(id){
             if(!newcontent) {
                 var confirmation = confirm('Delete this item?');
                 if(confirmation) {
-                  removeReminder(id);
-              }
-          }
-          else{
-            localStorage.setItem(id, newcontent);
-            saved.show();
-            setTimeout(function(){
-                saved.hide();
-            },2000);
-            $(this).remove();
-            $('.icon-pencil').show();
+                    removeReminder(id);
+                }
+            }
+            else{
+                localStorage.setItem(id, newcontent);
+                saved.show();
+                setTimeout(function(){
+                    saved.hide();
+                },2000);
+                $(this).remove();
+                $('.icon-pencil').show();
+            }
+
         }
 
-    }
-
-}));
+    }));
 };
 
 //removes item from localStorage
@@ -340,7 +347,7 @@ var UndoOption = function(){
             undobutton.fadeOut(1000);
         }, 3000);  
     },1000)
-    updateColorOfUserNewlySelectedNodes();
+    updateColorOfUserSelectedNodes();
 };
 
 var removeReminder = function(id){
@@ -356,7 +363,7 @@ var removeReminder = function(id){
     deleteReminder(id);
     // delete from selectedNodesArray
     deleteSelectedNodeFromArray(id)
-    //add undo option only if the edited item is not empty
+    // add undo option only if the edited item is not empty
 
     unselectedNodeColorUpdate(id);
 
@@ -440,7 +447,7 @@ var createReminder = function(id, content, index){
     }
 };
 
-//handler for input
+// handler for input
 var handleInput = function(){
     $('#input-form').on('submit', function(event){
         var input = $('#text'),
@@ -496,11 +503,10 @@ function insertSelectedNodeToArray(id, label) {
 }
 
 function addSelectedNode(data, callback) {
-  clearPopUp();  
   insertSelectedNodeToArray(data.id, data.label);
   // addToSelectedBox(data);
   createReminder(data.id, data.label);
-  callback.apply(this,[]);  
+  callback.apply(this,[]);
 }
 
 function deleteSelectedNodeFromArray(id) {
@@ -513,7 +519,6 @@ function deleteSelectedNodeFromArray(id) {
 }
 
 function deleteSelectedNode(data, callback) {
-    clearPopUp();
     deleteSelectedNodeFromArray(data.id);
     //deleteFromSelectedBox(data);
     removeReminder(data.id)
@@ -521,71 +526,188 @@ function deleteSelectedNode(data, callback) {
 }
 
 function showEditSelection(node, DOM) {
+    
     // filling in the popup DOM elements
     document.getElementById('node-label').innerHTML = node.label;
-    var result = $.grep(selectedNodesArray, function(e){ return e.id === node.id; });
+    var selected = ($.grep(selectedNodesArray, function(e){ return e.id === node.id; }).length > 0);
     // set the pop up at the posisiton of the mouse
     /*var networkCanvasWidth = $("#network").width();
     var networkCanvasHeight = $("#network").height();*/
     $("#network-popUp").css("left", DOM["x"] + 5);
     $("#network-popUp").css("top", DOM["y"] + 5);
     
-    if (result.length > 0) {
+    if (selected) {
         document.getElementById('addButton').style.display = 'none';
         document.getElementById('deleteButton').style.display = 'inline';
         document.getElementById('deleteButton').onclick = function() {
             deleteSelectedNode(node, function() {
-                updateColorOfUserNewlySelectedNodes();
+                updateColorOfUserSelectedNodes();
             });
+            clearPopUp();
         }
     } else {
         document.getElementById('addButton').style.display = 'inline';
         document.getElementById('deleteButton').style.display = 'none';
         document.getElementById('addButton').onclick = function() {
             addSelectedNode(node, function() {
-                updateColorOfUserNewlySelectedNodes();
+                updateColorOfUserSelectedNodes();
             });
+            clearPopUp();
         }
     }
     document.getElementById('cancelButton').onclick = function() {
         cancelEdit();
-    }    
+    }
+    
+    if (node["hasChildren"] === 1 || node["hasChildren"] === undefined) {        
+        if (node["childrenShown"] === 1) {
+            document.getElementById('expandButton').style.display = 'none';
+            document.getElementById('collapseButton').style.display = 'inline';            
+            document.getElementById('collapseButton').onclick = function() {
+                collapseNode(node);
+                clearPopUp();
+            };
+        } else if (node["childrenShown"] === -1) {
+            document.getElementById('expandButton').style.display = 'inline';
+            document.getElementById('collapseButton').style.display = 'none';
+            document.getElementById('expandButton').onclick = function() {
+                expandNode(node);
+                clearPopUp();
+            };
+        } else if (node["childrenShown"] === 0) {
+            document.getElementById('expandButton').style.display = 'inline';
+            document.getElementById('collapseButton').style.display = 'inline';
+            document.getElementById('collapseButton').onclick = function() {
+                collapseNode(node);
+                clearPopUp();
+            };
+            document.getElementById('expandButton').onclick = function() {
+                expandNode(node);
+                clearPopUp();
+            };
+        }        
+    } else {
+        document.getElementById('expandButton').style.display = 'none';
+        document.getElementById('collapseButton').style.display = 'none';
+    }
+
     document.getElementById('network-popUp').style.display = 'block';
 }
 
+function collapseNode(node) {
+    var allEgdes = edges.get();
+    var branchLeftFlag = false;
+    var branchFoldedFlag = false;
+
+    for (var i = 0; i < allEgdes.length; i++) {
+        if (allEgdes[i].from == node.id) {
+            var flag = 0;
+            var childToUpdate = nodes.get(allEgdes[i].to);            
+            var edgeToUpdate = allEgdes[i];
+            var edgesConnectedToChild = network.getConnectedEdges(allEgdes[i].to);
+            if (edgesConnectedToChild.length > 1) {
+                var edgeFromCentralToChildFlag = false;
+                var edgeFromChildToCentralFlag = false;
+                var connectedToOtherNodes = false;
+                for (var j = edgesConnectedToChild.length - 1; j >= 0; j--) {
+                    if (edgesConnectedToChild[j] == node.id + "to" + allEgdes[i].to && edges.get(edgesConnectedToChild[j])["hidden"] !== true) {
+                        edgeFromCentralToChildFlag = true;
+                    } else if (edgesConnectedToChild[j] == allEgdes[i].to + "to" + node.id && edges.get(edgesConnectedToChild[j])["hidden"] !== true) {
+                        edgeFromChildToCentralFlag = true;
+                    } else if (edgesConnectedToChild[j].includes(allEgdes[i].to) && edges.get(edgesConnectedToChild[j])["hidden"] !== true) {                       
+                        connectedToOtherNodes = true;
+                    }
+                };
+
+                if (edgeFromChildToCentralFlag && edgeFromCentralToChildFlag) {
+                    flag = 1;
+                } else if (connectedToOtherNodes) {
+                    flag = 2;
+                }
+            };
+            if (flag === 0) {
+                childToUpdate["hidden"] = true;
+                nodes.update(childToUpdate);
+                edgeToUpdate["hidden"] = true;
+                edges.update(edgeToUpdate);
+                branchFoldedFlag = true;
+            } else if (flag === 1) {
+                edgeToUpdate["hidden"] = true;
+                edges.update(edgeToUpdate);
+                branchFoldedFlag = true;
+            } else {
+                branchLeftFlag = true;
+            }
+        };
+    };
+
+    if (!branchFoldedFlag) {
+        node["childrenShown"] = 1;
+    } else if (branchLeftFlag) {
+        node["childrenShown"] = 0;
+    } else {
+        node["childrenShown"] = -1;
+    }
+
+    nodes.update(node);
+}
+
+function expandNode(node) {
+    var nodeId = node.id;
+    if (isWithChildren(nodeId)) {
+        var allEgdes = edges.get();
+        if (allEgdes.length > 0) {
+            for (var i = allEgdes.length - 1; i >= 0; i--) {
+                if (allEgdes[i].from == nodeId) {
+                    if (edges.get(allEgdes[i].to.toString + "to" + node.id.toString) === null) {
+                        var childId = allEgdes[i].to;
+                        var childToUpdate = nodes.get(childId);
+                        childToUpdate["hidden"] = false;
+                        nodes.update(childToUpdate);
+                        var edgeToUpdate = allEgdes[i];
+                        edgeToUpdate["hidden"] = false;
+                        edges.update(edgeToUpdate);
+                    } else {
+                        var edgeToUpdate = allEgdes[i];
+                        edgeToUpdate["hidden"] = false;
+                        edges.update(edgeToUpdate);
+                    }
+                };
+            };
+        };
+    } else {
+        if (nodes.get(nodeId)["label"] !== document.getElementById('node-label').innerHTML) {
+            clearPopUp();
+        }        
+        showChildren(nodeId);        
+    };
+    updateColorOfUserSelectedNodes();
+    node["childrenShown"] = 1;
+    nodes.update(node);
+}
+
 // on click, show add or delete menu
-function hold(params) {
+function click(params) {
+    reverseNeighbourhoodHighlight();
     var nodeId = params.nodes[0];
-    if (nodeId != null) {        
+    if (nodeId != null) {
         selectedNode = nodes.get(nodeId);
         var DOM = params["pointer"]["DOM"];
         showEditSelection(selectedNode, DOM);
-    };
+    };    
 }
 
-// on click, if node is selected, show children and hightlight 1st and 2nd layers of children, else hide popup
-function click(params) {
-    var nodeId = params.nodes[0];
-    if (nodeId == null) {
-        clearPopUp();
-    } else {
-        /*focus(nodeId);*/
-        if (nodes.get(nodeId)["label"] !== document.getElementById('node-label').innerHTML) {
-            clearPopUp();
+function reverseNeighbourhoodHighlight() {
+    var allNodes = nodes.get();
+    for (var i = 0; i < allNodes.length; i++) {
+        allNodes[i]["color"] = colorSet["original"];
+        if (allNodes[i]["hiddenLabel"] !== undefined) {
+           allNodes[i]["label"] = allNodes[i]["hiddenLabel"];
+           allNodes[i]["hiddenLabel"] = undefined;
         }
-        if (!isWithChildren(nodeId)) {
-            showChildren(nodeId);
-        };
-        neighbourhoodHighlight(params);        
-    };
-    updateColorOfUserNewlySelectedNodes();
-}
-
-function doubleClick(params) {
-    var nodeId = params.nodes[0];
-    if (nodeId != null) {
-        focus(nodeId);
     }
+    nodes.update(allNodes);
+    updateColorOfUserSelectedNodes();
 }
 
 // add node to selected box
@@ -614,7 +736,6 @@ function deleteFromSelectedBox(data) {
 }
 
 function showGraphDraw(pageID, pageTitle) {
-    withChildren = [];
     var windowHeight = window.innerHeight;
     $("#network").css("height", windowHeight);
     $("#selected").css("height", windowHeight);
@@ -626,7 +747,8 @@ function showGraphDraw(pageID, pageTitle) {
     {
         id: pageID,
         label: pageTitle, 
-        color: colorSet["original"]
+        color: colorSet["original"],
+        childrenShown: -1
     }
     ]);
 
@@ -643,8 +765,7 @@ function showGraphDraw(pageID, pageTitle) {
 
     network = new vis.Network(container, data, options);
     network.on("click", click);
-    network.on("hold", hold);
-    network.on("doubleClick", doubleClick);
+    network.on("doubleClick", neighbourhoodHighlight);
 
     // disable the browser default right click menu
     $('#network').bind('contextmenu', function(e){
@@ -660,7 +781,8 @@ function showGraphRedraw() {
                 nodes.update({
                     id: currentNode.id,
                     label: currentNode.label, 
-                    color: undefined
+                    color: undefined,
+                    childrenShown: -1
                 });
             }
         };

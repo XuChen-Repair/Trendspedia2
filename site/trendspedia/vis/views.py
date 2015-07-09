@@ -9,7 +9,7 @@ import random
 
 # get all pagelinks in a page
 def getAllPLs(request):
-    print "getAllPLs called."
+    # print "getAllPLs called."
     params = request.GET
     page_id = params.get("pageID")
     try:
@@ -20,7 +20,8 @@ def getAllPLs(request):
         pagelinks = cursor.fetchall()
         def convert(link):
             link = list(link)
-            link[1] = link[1].decode('utf-8')
+            link[1] = link[1].encode('utf-8').decode('utf-8')
+            # link[1] = link[1].decode('utf-8')
             return link
         pagelinks = map(convert, pagelinks)
     except mysql.connector.Error as err:
@@ -34,7 +35,10 @@ def getAllPLs(request):
         cnx.close()
     return HttpResponse(json.dumps(pagelinks))
 
-def selectNodes(request, format):
-    t = loader.get_template('selectNodes.html') 
-    c = RequestContext(request, {})
-    return HttpResponse(t.render(c))
+# def selectNodes(request, format):
+#     t = loader.get_template('selectNodes.html') 
+#     c = RequestContext(request, {})
+#     return HttpResponse(t.render(c))
+
+def getTweetsWithMultipleNodes(nodeArray):
+        pass
