@@ -87,11 +87,11 @@ function isWithChildren(nodeId) {
 
 // get children from database
 // call python script. get children of a node as array of nodes
-function getChildren(nodeId) {
+function getChildren(nodeId, callback) {
     var resp = null;
     $.ajax({
         type: "GET",
-        async: false,
+        // async: false,
         url: "/vis/getAllPLs?pageID=" + nodeId.toString(), 
         success: function( data ) {
             var nodesToReturn = [];
@@ -112,12 +112,14 @@ function getChildren(nodeId) {
             }
             nodes.update(nodeToUpdate);
             resp = nodesToReturn;
+            callback(resp);
+            return;
         },
         error: function (xhr, textStatus, errorThrown) {
             console.log(errorThrown);
+            callback([]);
         }
     });
-    return resp;
 }
 
 // add children nodes as well as edges
@@ -144,10 +146,11 @@ function addChildren(nodeId, children) {
 
 // get children, add children nodes as well as edges
 function showChildren(nodeId) {
-	var children = getChildren(nodeId);
-	if (children.length > 0) {
-		addChildren(nodeId, children);
-	};
+	var children = getChildren(nodeId, function(children){
+        if (children.length > 0) {
+            addChildren(nodeId, children);
+        };
+    });    	
 }
 
 // highlight first and second layers of neibors
