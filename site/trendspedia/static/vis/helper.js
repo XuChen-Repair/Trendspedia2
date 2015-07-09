@@ -45,6 +45,9 @@ var colorSet = {
 };
 
 var options = {
+    edges:{
+        arrows: 'to'
+    },
     physics:{
         enabled: true,
         barnesHut: {
