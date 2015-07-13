@@ -55,7 +55,7 @@ $(document).ready(function() {
 	var newTweets = 0;
 	var AllTweets = new Array();
 
-	//DY	
+	//DY
 	var getTweets = function(query) {
 		console.log("getTweets " + query);
 		$.getJSON('/twitter/getTweetsfromDB?query=' + query + '&pageID=' + pageID, function(data) {
@@ -64,7 +64,7 @@ $(document).ready(function() {
 				var tweetsfromDB = [];
 
 				for (var i = 0; i < AllTweets.length; i++) {
-					var tweetfromDB = {};		
+					var tweetfromDB = {};
 					var splitter = AllTweets[i].text.split(" ");
 					var output = "";
 					for (var j = 0; j < splitter.length; j++) {
@@ -76,7 +76,7 @@ $(document).ready(function() {
 					}
 					tweetfromDB.content = output;
 					tweetfromDB.image_url = AllTweets[i].profileImageUrl;
-					tweetfromDB.createTime = AllTweets[i].createdAt.$date;				
+					tweetfromDB.createTime = AllTweets[i].createdAt.$date;
 					var localTime = new Date(tweetfromDB.createTime);
 					var correctTime = new Date(localTime.getTime() + 28800 * 1000);
 					tweetfromDB.createTime = correctTime.toString().replace("GMT+0800 (SGT)", "");
@@ -84,8 +84,8 @@ $(document).ready(function() {
 					tweetfromDB.id = AllTweets[i]._id;
 
 					tweetsfromDB.push(tweetfromDB);
-				}	
-				
+				}
+
 				for (var i = 0; i < tweetsfromDB.length; i++) {
 					$('#scroller').prepend('<li>' + '<img src = "' + tweetsfromDB[i].image_url + '">&nbsp;' + '<span>' + tweetsfromDB[i].name + ': </span>' + '<p style = "font-weight:100;font-size:12px;">' + tweetsfromDB[i].content + '</p>' + '<div style = "font-size:14px;">' + tweetsfromDB[i].createTime + '</div>' + '</li>');
 				}
@@ -255,7 +255,7 @@ $(document).ready(function() {
 				hotMaterials = data.hotMaterials;
 				while(MaterialCount < materialLoadAmount){
 					if(MaterialCount <= hotMaterials.length - 1){
-						presentMaterialsContent(hotMaterials[MaterialCount]);	
+						presentMaterialsContent(hotMaterials[MaterialCount]);
 						MaterialCount++;
 					}else{
 						break;
@@ -275,7 +275,7 @@ $(document).ready(function() {
 				$('#wikiArticle').removeClass('span12').addClass('span9');
 				$('#tweets').show();
 				//$('#head-nav').show();
-				
+
 				//DY
 				getTweets(query);
 
@@ -335,6 +335,7 @@ $(document).ready(function() {
 						$('#searchResult').show();
 						$('#contentArea').hide();
 						$('#graphpage').hide();
+						$('#tagDetailPage').hide();
 					} else {
 						$('.tabbable').hide();
 						var noResult = "<h1>No result found</h1>";
@@ -401,7 +402,7 @@ $(document).ready(function() {
 		var limit = MaterialCount + materialLoadAmount;
 		while (MaterialCount < limit){
 			if(MaterialCount <= hotMaterials.length - 1){
-				presentMaterialsContent(hotMaterials[MaterialCount]);	
+				presentMaterialsContent(hotMaterials[MaterialCount]);
 				MaterialCount++;
 			}else
 			{
@@ -423,66 +424,99 @@ $(document).ready(function() {
 	});
 
 	$('#hot').click(function() {
+		$('#tweets').show();
+		$('#wikiArticle').addClass('span9').removeClass('span12');
 		$('#hotpage').show();
 		$('#summarypage').hide();
 		$('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
 		$("#graphpage").hide();
+		$('#tagDetailPage').hide();
 		return false;
 	});
 
 	$('#wikis').click(function() {
+		$('#tweets').show();
+		$('#wikiArticle').addClass('span9').removeClass('span12');
 		$('#hotpage').hide();
 		$('#summarypage').hide();
 		$('#wikipage').show();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
 		$("#graphpage").hide();
+		$('#tagDetailPage').hide();
 		getRelatedWikiResult(query);
 		return false;
 	});
 
 	$('#summary').click(function() {
+		$('#tweets').show();
+		$('#wikiArticle').addClass('span9').removeClass('span12');
 		$('#hotpage').hide();
 		$('#summarypage').show();
 		$('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
 		$("#graphpage").hide();
+		$('#tagDetailPage').hide();
 		return false;
 	});
 
 	$("#bubble").click(function(){
+		$('#tweets').show();
+		$('#wikiArticle').addClass('span9').removeClass('span12');
 		$('#hotpage').hide();
-        $('#summarypage').hide();
-        $('#wikipage').hide();
+    $('#summarypage').hide();
+    $('#wikipage').hide();
 		$('#bubblepage').show();
 		$('#eventpage').hide();
 		$("#graphpage").hide();
+		$('#tagDetailPage').hide();
 		return false;
 	});
 
 	$("#event").click(function(){
+		$('#tweets').show();
+		$('#wikiArticle').addClass('span9').removeClass('span12');
 		$('#hotpage').hide();
-        $('#summarypage').hide();
-        $('#wikipage').hide();
+    $('#summarypage').hide();
+    $('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').show();
 		$("#graphpage").hide();
+		$('#tagDetailPage').hide();
 		return false;
 	});
 
 	$("#graphQueryNavBarTab").click(function(){
+		$('#tweets').show();
+		$('#wikiArticle').addClass('span9').removeClass('span12');
 		$('#hotpage').hide();
-        $('#summarypage').hide();
-        $('#wikipage').hide();
+    $('#summarypage').hide();
+    $('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
 		$("#graphpage").show();
+		$('#tagDetailPage').hide();
 		showGraph(pageID, pageTitle);
 		return false;
 	});
+
+	$('#tagDetailNavBarTab').click(function(){
+		$('#tweets').hide();
+		// $('#wikiArticle').hide();
+		$('#wikiArticle').addClass('span12').removeClass('span9');
+		$('#hotpage').hide();
+    $('#summarypage').hide();
+    $('#wikipage').hide();
+		$('#bubblepage').hide();
+		$('#eventpage').hide();
+		$("#graphpage").hide();
+		$('#tagDetailPage').show();
+		initTagDetailMap();
+		return false;
+	})
 
 	if ($('#username').html() == "") {
 		$('#username').html('Trendspedia');
@@ -528,7 +562,6 @@ function requestTitle(site, callback) {
 			callback("");
 		}
 	}
-
 }
 
 function requestDescription(site, callback) {
@@ -568,7 +601,7 @@ function requestDescription(site, callback) {
 }
 
 function presentMaterialsContent(hotMaterial){
-	hotCount++; 
+	hotCount++;
 	imagesHtml = "";
 	var length = hotMaterial.images.length;
 	//tempfix for images showing up weird
@@ -604,7 +637,7 @@ function presentMaterialsContent(hotMaterial){
           "<a class='hu-seemore'>See More</a><br>"+
 					imagesHtml + "<br>"+
                                    "</dt>");
-	
+
 }
 
 $(function(){
@@ -620,6 +653,31 @@ $(function(){
 		}
 	});
 });
+
+function initTagDetailMap(){
+	$('#tagDetailPage').css('height', parseInt($('body').css('height')) - 40);
+	$('#tagDetailPage').css('width', parseInt($('body').css('width')));
+	tweetMap = new google.maps.Map(document.getElementById('map-canvas'), {
+		zoom: 11,
+		center: {lat: -1.3144615, lng: 103.8188962},
+		mapTypeId: "satellite"
+	});
+	for(var i=0; i<100; i++){
+		var lat = Math.random()*120 - 60;
+		var lng = Math.random()*360 - 180;
+		randomCircle = new google.maps.Circle({
+			strokeColor: '#FF0000',
+			strokeOpacity: 0.8,
+			strokeWeight: 2,
+			fillColor: '#FF0000',
+			fillOpacity: 0.35,
+			map: tweetMap,
+			center: new google.maps.LatLng(lat, lng),
+			radius: 400*400,
+		})
+	}
+}
+google.maps.event.addDomListener(window, 'load', initTagDetailMap);
 /*function presentMaterialsContent(hotMaterial){
 	var url = hotMaterial.url;
 	requestTitle(url, function(data) {
@@ -635,7 +693,7 @@ $(function(){
 						if(d != ""){
 							if(d.length > 250){
 								d = d.substring(0,250)+"...";
-							}	
+							}
 							$("#hot-Materials").append("<dt>"+
 								"<font>"+hotCount+".</font><a href = '"+url+"'>"+title+"</a>"+
 								"<br>"+
@@ -657,7 +715,7 @@ $(function(){
 							count = 4;
 						}
 						for(var i = 0;i < count;i++){
-							$("#"+hotMaterial.tweetID).append('<div class = "span3"><a href = "'+hotMaterial.images[i].url+'"><img src = "' + hotMaterial.images[i].url + '" style = "height:120px;width = 198px"/></a></div>');	
+							$("#"+hotMaterial.tweetID).append('<div class = "span3"><a href = "'+hotMaterial.images[i].url+'"><img src = "' + hotMaterial.images[i].url + '" style = "height:120px;width = 198px"/></a></div>');
 						}
 						$("#hot-Materials dt").last().append("<br>");
 					} else {
@@ -670,5 +728,5 @@ $(function(){
 		}else{
 			console.log("cannot get the title");
 		}
-	});	
+	});
 }*/

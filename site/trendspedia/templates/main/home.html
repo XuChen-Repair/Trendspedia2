@@ -34,7 +34,7 @@
 		<link rel="stylesheet" href="{{STATIC_URL}}css/main.css">
 		<link rel="stylesheet" href="{{STATIC_URL}}css/jquery.sidr.dark.css">
 		<link rel="stylesheet" href="{{STATIC_URL}}css/bubble.css">
-		
+
 		<script src="{{STATIC_URL}}js/quadTree.js" charset="utf-8"></script>
 		<script src="{{STATIC_URL}}js/spiral2.js" charset="utf-8"></script>
 		<script src="{{STATIC_URL}}js/track2.js" charset="utf-8"></script>
@@ -46,7 +46,7 @@
 		<script type="text/javascript" src="{{STATIC_URL}}js/browser.js"></script>
 		<script type="text/javascript" src="{{STATIC_URL}}js/d3.v3.js"></script>
 		<script type="text/javascript" src="{{STATIC_URL}}js/googlemap.js"></script>
-		
+
 		<script src = "{{STATIC_URL}}js/jquery.sidr.min.js"></script>
 		<script src="{{STATIC_URL}}js/d3.layout.cloud.js"></script>
 		<script type="text/javascript" src="{{STATIC_URL}}js/tagcloud_new.js"></script>
@@ -56,9 +56,10 @@
 		<script src = "{{STATIC_URL}}js/jquery.dynacloud-5.js"></script>
 		<script src = "{{STATIC_URL}}js/bubble.js"></script>
 		<script src = "{{STATIC_URL}}js/jquery.awesomeCloud-0.2.js"></script>
+		<script src = "{{STATIC_URL}}js/vendor/google.maps.v32.js"></script>
 		<!-- // <script src = "{{STATIC_URL}}js/getEvents.js"></script>		 -->
 		<script src = "{{STATIC_URL}}js/home.js"></script>
-		
+
 		<!--[if lt IE 7]>
 		<p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
 		<![endif]-->
@@ -145,16 +146,19 @@
 										<a id = "hot" class = "AnalysisPage" tabindex="-1" href="#" >Hot URLs</a>
 									</li>
 									<li>
-										<a id = "summary" class = "AnalysisPage" tabindex="-1" href="#">Tag Summaries</a>	
+										<a id = "summary" class = "AnalysisPage" tabindex="-1" href="#">Tag Summaries</a>
 									</li>
 									<li>
-										<a id = "bubble" class = "AnalysisPage" tabindex="-1" href="#">Information Network</a>	
+										<a id = "bubble" class = "AnalysisPage" tabindex="-1" href="#">Information Network</a>
 									</li>
 									<li>
-										<a id = "event" class = "AnalysisPage" tabindex="-1" href="#">Emerging Events</a>	
+										<a id = "event" class = "AnalysisPage" tabindex="-1" href="#">Emerging Events</a>
 									</li>
 									<li>
-										<a id = "graphQueryNavBarTab" class = "AnalysisPage" tabindex="-1" href="#">Graph Query</a>	
+										<a id = "graphQueryNavBarTab" class = "AnalysisPage" tabindex="-1" href="#">Graph Query</a>
+									</li>
+									<li>
+										<a href="#" id="tagDetailNavBarTab" class="AnalysisPage" tabindex="-1">Tag Detail</a>
 									</li>
 								</ul>
 							</li>
@@ -167,6 +171,30 @@
 						</form>
 					</div><!--/.nav-collapse -->
 				</div>
+			</div>
+		</div>
+
+		# The Map is outside the container-fluid because it's meant as a background to the Tag Detail page
+		<div id="tagDetailPage" style="display: none;">
+			<div class="infoWindow">
+				<p><strong>TOPICS</strong></p>
+				<span class="huge">SINGAPORE, </span><br>
+				<span class="huge">CHINA</span>
+				<p><strong>SENTIMENT</strong></p>
+				<h1><span class="plus-color">61%</span> /
+				<span class="minus-color">27%</span>
+				<small class="neutral-color">12%</small></h1>
+				<p><strong>POPULAR KEYWORDS</strong></p>
+				<ol>
+					<li>Chicken Rice</li>
+					<li>Cantonese</li>
+					<li>CNY</li>
+				</ol>
+			</div>
+			<div class="tagWindow">
+				<img src="http://puu.sh/iXsvM/1895f9b20a.png" alt="">
+			</div>
+			<div id="map-canvas">
 			</div>
 		</div>
 
@@ -214,7 +242,7 @@
 						<div id = "summarypage" class="analysis-page" style = "display:none;">
 							<h1 class = "offset4 span5" style = "font-family:Open Sans;font-weight:400;border:none;">Tag Summarizaton</h1>
 							<div id = "graph" style = "width:100%;"></div>
-				
+
 							<a id="tweet-menu" href="#sidr" style="display:none">Toggle menu</a>
 							<div id="sidr">
 							  <ul id="tweet-list">
@@ -223,7 +251,7 @@
 								<li><a href="#">List 3</a></li>
 							  </ul>
 							</div>
-							 
+
 							<script>
 								$(document).ready(function() {
 								  $('#tweet-menu').sidr();
@@ -278,7 +306,7 @@
    										<div>Page List begin</div>
    										<div>Page List begin</div>
   										<div>Page List begin</div>
-  									</div> 
+  									</div>
    									</div>
    									<div id="status"></div>
     									<div id="history"></div>
