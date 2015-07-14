@@ -433,6 +433,7 @@ $(document).ready(function() {
 		$('#eventpage').hide();
 		$("#graphpage").hide();
 		$('#tagDetailPage').hide();
+		$('#historypage').hide();
 		return false;
 	});
 
@@ -446,6 +447,7 @@ $(document).ready(function() {
 		$('#eventpage').hide();
 		$("#graphpage").hide();
 		$('#tagDetailPage').hide();
+		$('#historypage').hide();
 		getRelatedWikiResult(query);
 		return false;
 	});
@@ -460,6 +462,7 @@ $(document).ready(function() {
 		$('#eventpage').hide();
 		$("#graphpage").hide();
 		$('#tagDetailPage').hide();
+		$('#historypage').hide();
 		return false;
 	});
 
@@ -473,6 +476,7 @@ $(document).ready(function() {
 		$('#eventpage').hide();
 		$("#graphpage").hide();
 		$('#tagDetailPage').hide();
+		$('#historypage').hide();
 		return false;
 	});
 
@@ -486,6 +490,7 @@ $(document).ready(function() {
 		$('#eventpage').show();
 		$("#graphpage").hide();
 		$('#tagDetailPage').hide();
+		$('#historypage').hide();
 		return false;
 	});
 
@@ -499,11 +504,12 @@ $(document).ready(function() {
 		$('#eventpage').hide();
 		$("#graphpage").show();
 		$('#tagDetailPage').hide();
+		$('#historypage').hide();
 		showGraph(pageID, pageTitle);
 		return false;
 	});
 
-	$('#tagDetailNavBarTab').click(function(){
+	$('#tagDetailNavBarTab, .thumbnail').click(function(){
 		$('#tweets').hide();
 		// $('#wikiArticle').hide();
 		$('#wikiArticle').addClass('span12').removeClass('span9');
@@ -514,7 +520,22 @@ $(document).ready(function() {
 		$('#eventpage').hide();
 		$("#graphpage").hide();
 		$('#tagDetailPage').show();
+		$('#historypage').hide();
 		initTagDetailMap();
+		return false;
+	})
+
+	$('#queryHistoryNavBarTab').click(function(){
+		$('#tweets').show();
+		// $('#wikiArticle').hide();
+		$('#hotpage').hide();
+    $('#summarypage').hide();
+    $('#wikipage').hide();
+		$('#bubblepage').hide();
+		$('#eventpage').hide();
+		$("#graphpage").hide();
+		$('#tagDetailPage').hide();
+		$('#historypage').show();
 		return false;
 	})
 
