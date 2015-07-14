@@ -334,7 +334,8 @@ $(document).ready(function() {
 						$('#searchResult').html(html);
 						$('#searchResult').show();
 						$('#contentArea').hide();
-						$('#graphpage').hide();
+						$('#graphPageForLinkedPage').hide();
+						$('#graphPageForRelatedPage').hide();
 					} else {
 						$('.tabbable').hide();
 						var noResult = "<h1>No result found</h1>";
@@ -373,19 +374,16 @@ $(document).ready(function() {
 		}
 	}
 
-	//DY
-	var showGraph = function(pageID, pageTitle) {
+	// DY
+	var showGraphForLinkedPage = function(pageID, pageTitle) {
 		handleDeleteButton();
-		// call function initializing the graph (in vis helper.js)
-		if (nodes !== undefined) {
-			showGraphRedraw();
-			console.log("redraw");
-		} else {
-			showGraphDraw(pageID, pageTitle);
+		if (nodes === undefined) {
+			// call function initializing the graph (in vis helper.js)
+			showGraphForLinkedPageDraw(pageID, pageTitle);
 		}
 	}
 
-	//loading the page
+	// loading the page
 	loadWiki(finalAPI);
 
 	$('#wikiSearch').submit(function() {
@@ -428,7 +426,8 @@ $(document).ready(function() {
 		$('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
-		$("#graphpage").hide();
+		$('#graphPageForLinkedPage').hide();
+		$('#graphPageForRelatedPage').hide();
 		return false;
 	});
 
@@ -438,7 +437,8 @@ $(document).ready(function() {
 		$('#wikipage').show();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
-		$("#graphpage").hide();
+		$('#graphPageForLinkedPage').hide();
+		$('#graphPageForRelatedPage').hide();
 		getRelatedWikiResult(query);
 		return false;
 	});
@@ -449,7 +449,8 @@ $(document).ready(function() {
 		$('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
-		$("#graphpage").hide();
+		$('#graphPageForLinkedPage').hide();
+		$('#graphPageForRelatedPage').hide();
 		return false;
 	});
 
@@ -459,7 +460,8 @@ $(document).ready(function() {
         $('#wikipage').hide();
 		$('#bubblepage').show();
 		$('#eventpage').hide();
-		$("#graphpage").hide();
+		$('#graphPageForLinkedPage').hide();
+		$('#graphPageForRelatedPage').hide();
 		return false;
 	});
 
@@ -469,18 +471,32 @@ $(document).ready(function() {
         $('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').show();
-		$("#graphpage").hide();
+		$('#graphPageForLinkedPage').hide();
+		$('#graphPageForRelatedPage').hide();
 		return false;
 	});
 
-	$("#graphQueryNavBarTab").click(function(){
+	$("#graphQueryForLinkedPageNavBarTab").click(function(){
+		$('#hotpage').hide();
+		$('#summarypage').hide();
+		$('#wikipage').hide();
+		$('#bubblepage').hide();
+		$('#eventpage').hide();
+		$("#graphPageForLinkedPage").show();
+		$('#graphPageForRelatedPage').hide();
+		showGraphForLinkedPage(pageID, pageTitle);
+		return false;
+	});
+
+	$("#graphQueryForRelatedPageNavBarTab").click(function(){
 		$('#hotpage').hide();
         $('#summarypage').hide();
         $('#wikipage').hide();
 		$('#bubblepage').hide();
 		$('#eventpage').hide();
-		$("#graphpage").show();
-		showGraph(pageID, pageTitle);
+		$("#graphPageForLinkedPage").hide();
+		$('#graphPageForRelatedPage').show();
+		showGraphForRelatedPage(pageID, pageTitle);
 		return false;
 	});
 
