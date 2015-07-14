@@ -20,6 +20,7 @@
 		<!--link href="{{STATIC_URL}}vis/font-awesome.css" rel="stylesheet" type="text/css"/-->
 		<link href="{{STATIC_URL}}vis/creative-list-effects/styles-1.css" rel="stylesheet" type="text/css"/>
 		<script type="text/javascript" src="{{STATIC_URL}}vis/helper.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 
 
 		<meta charset="utf-8">
@@ -154,7 +155,10 @@
 										<a id = "event" class = "AnalysisPage" tabindex="-1" href="#">Emerging Events</a>	
 									</li>
 									<li>
-										<a id = "graphQueryNavBarTab" class = "AnalysisPage" tabindex="-1" href="#">Graph Query</a>	
+										<a id = "graphQueryForLinkedPageNavBarTab" class = "AnalysisPage" tabindex="-1" href="#">Linked Pages</a>	
+									</li>
+									<li>
+										<a id = "graphQueryForRelatedPageNavBarTab" class = "AnalysisPage" tabindex="-1" href="#">Related Pages</a>	
 									</li>
 								</ul>
 							</li>
@@ -287,7 +291,7 @@
 							</section>
 						</div>
 
-						<div id = "graphpage" class="analysis-page" style = "display:none;">
+						<div id = "graphPageForLinkedPage" class="analysis-page" style = "display:none;">
 							<div id="network-popUp">
 								<button value="cancel" id="cancelButton" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 								<span id="node-label"></span>
@@ -315,6 +319,16 @@
 								</footer>
 								</div>
 								<!-- end of http://sarasoueidan.com/blog/creative-list-effects/-->
+							</div>							
+						</div>
+
+						<div id = "graphPageForRelatedPage" class="analysis-page" style = "display:none;">
+							<div id="network-forRelatedGraph"></div>
+							<div id="network-popUp-forRelatedGraph" style="display:none">
+								<button value="cancel" id="cancelButton-forRelatedGraph" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								<span id="node-label-forRelatedGraph"></span>
+								<button value="add" id="addButton-forRelatedGraph" class="icon-check popupIcon" contenteditable="false" style="padding:0px"></button>
+								<button value="delete" id="deleteButton-forRelatedGraph" class="icon-trash popupIcon" contenteditable="false" style="padding:0px"></button>
 							</div>
 						</div>
 					</div>

@@ -528,7 +528,7 @@ function deleteSelectedNode(data, callback) {
     callback.apply(this,[]);    
 }
 
-function showEditSelection(node, DOM) {
+function showEditSelectionForLinkedGraph(node, DOM) {
     
     // filling in the popup DOM elements
     document.getElementById('node-label').innerHTML = node.label;
@@ -696,8 +696,8 @@ function click(params) {
     if (nodeId != null) {
         selectedNode = nodes.get(nodeId);
         var DOM = params["pointer"]["DOM"];
-        showEditSelection(selectedNode, DOM);
-    };    
+        showEditSelectionForLinkedGraph(selectedNode, DOM);
+    };
 }
 
 function reverseNeighbourhoodHighlight() {
@@ -738,7 +738,7 @@ function deleteFromSelectedBox(data) {
     }
 }
 
-function showGraphDraw(pageID, pageTitle) {
+function showGraphForLinkedPageDraw(pageID, pageTitle) {
     var windowHeight = window.innerHeight;
     $("#network").css("height", windowHeight);
     $("#selected").css("height", windowHeight);
@@ -773,23 +773,216 @@ function showGraphDraw(pageID, pageTitle) {
     // disable the browser default right click menu
     $('#network').bind('contextmenu', function(e){
         return false;
-    });    
+    });
 }
 
-function showGraphRedraw() {
-    try {
-        for (var i = nodes.get().length - 1; i >= 0; i--) {
-            var currentNode = nodes.get()[i];
-            if (JSON.stringify(currentNode.color) !== JSON.stringify(colorSet["selected"])) {
-                nodes.update({
-                    id: currentNode.id,
-                    label: currentNode.label, 
-                    color: undefined,
-                    childrenShown: -1
-                });
-            }
-        };
-    } catch (err) {
-        alert(err);
+// for relatedNodesInCircle
+var nodesForRelatedPage, edgesForRelatedPage, networkForRelatedPage;
+
+var colorSetForRelatedPage = {
+    "selected": {
+        "border": "rgba(0,0,0,1)",
+        "background" : "rgba(0,0,0,1)",
+        "highlight" : {
+            "border": "rgba(0,0,0,1)",
+            "background" : "rgba(0,0,0,1)"
+        }
+    },
+    "1stRelated": {
+        "border": "rgba(51,74,148,0.75)",
+        "background" : "rgba(51,74,148,0.75)",
+        "highlight" : {
+            "border": "rgba(51,74,148,0.75)",
+            "background" : "rgba(51,74,148,0.75)"
+        }
+    },
+    "2ndRelated": {
+        "border": "rgba(107,158,223,0.75)",
+        "background" : "rgba(107,158,223,0.75)",
+        "highlight" : {
+            "border": "rgba(107,158,223,0.75)",
+            "background" : "rgba(107,158,223,0.75)"
+        }
     }
+};
+
+var massSetForRelatedPage = {
+    "selected": 0.01,
+    "1stRelated": 1,
+    "2ndRelated": 5
+}
+
+var optionsForRelatedPage = {
+    nodes: {
+        font: {
+          color: '#ffffff',
+          // size: 14, // px
+          // face: 'arial',
+          // background: 'none',
+          // strokeWidth: 0, // px
+          // strokeColor: '#ffffff',
+          // align: 'horizontal'
+        },
+    },
+    physics: {
+        barnesHut: {
+            avoidOverlap: 0.5
+        },
+        stabilization: {
+            enabled: true,
+            iterations: 400,
+            updateInterval: 40,
+            onlyDynamicEdges: false,
+            fit: true
+        },
+        minVelocity: 0.2
+    }
+}
+
+// array of nodes of the selected nodes.
+var selectedNodesForRelatedGraph = [];
+
+function isSelectedForRelatedGraph(node) {
+    return ($.grep(selectedNodesForRelatedGraph, function(e){ return e.id == node.id; }).length > 0);
+}
+
+function deleteFromSelectedNodesForRelatedGraph(id) {
+    for(var i = 0; i < selectedNodesForRelatedGraph.length; i++) {
+        var obj = selectedNodesForRelatedGraph[i];
+        if(obj.id == id) {
+            selectedNodesForRelatedGraph.splice(i, 1);
+        }
+    }
+}
+
+// node contains id and label
+// level is a string being one of "selected", "1stRelated", "2ndRelated"
+var addNodeToRelatedGraph = function(node, level) {
+    if (level === "selected" | level === "1stRelated" | level === "2ndRelated") {
+        var nodeToUpdate = node;
+        // nodeToUpdate["level"] = level;
+        nodeToUpdate["mass"] = massSetForRelatedPage[level];
+        nodeToUpdate["color"] = colorSetForRelatedPage[level];
+        nodesForRelatedPage.update(nodeToUpdate);
+        edgesForRelatedPage.update({from: 0, to: node.id, hidden: true});
+    } else {
+        console.log("wrong level provided:" + level)
+    }
+}
+
+function clearPopUpForRelatedGraph(){
+    document.getElementById('addButton-forRelatedGraph').onclick = null;
+    document.getElementById('deleteButton-forRelatedGraph').onclick = null;
+    document.getElementById('cancelButton-forRelatedGraph').onclick = null;
+    document.getElementById('network-popUp-forRelatedGraph').style.display = 'none';
+}
+
+function showEditSelectionForRelatedGraph(node, DOM) {
+    console.log("showEditSelectionForRelatedGraph");
+    // filling in the popup DOM elements
+    document.getElementById('node-label-forRelatedGraph').innerHTML = node.label;
+    // set the pop up at the posisiton of the mouse
+    $("#network-popUp-forRelatedGraph").css("left", DOM["x"] + 5);
+    $("#network-popUp-forRelatedGraph").css("top", DOM["y"] + 5);
+    
+    if (isSelectedForRelatedGraph(node)) {
+        document.getElementById('addButton-forRelatedGraph').style.display = 'none';
+        document.getElementById('deleteButton-forRelatedGraph').style.display = 'inline';
+        document.getElementById('deleteButton-forRelatedGraph').onclick = function() {
+            deleteFromSelectedNodesForRelatedGraph(node.id);
+            clearPopUpForRelatedGraph();
+            updateRelatedGraph();
+        }
+    } else {
+        document.getElementById('addButton-forRelatedGraph').style.display = 'inline';
+        document.getElementById('deleteButton-forRelatedGraph').style.display = 'none';
+        document.getElementById('addButton-forRelatedGraph').onclick = function() {
+            selectedNodesForRelatedGraph.push({id: node.id, label: node.label});
+            clearPopUpForRelatedGraph();
+            updateRelatedGraph();
+        }
+    }
+    document.getElementById('cancelButton-forRelatedGraph').onclick = function() {
+        clearPopUpForRelatedGraph();
+    }
+    document.getElementById('network-popUp-forRelatedGraph').style.display = 'block';
+}
+
+function clickRelatedGraph(params) {
+    console.log("clickRelatedGraph");
+    var nodeId = params.nodes[0];
+    if (nodeId != null) {
+        var selectedNode = nodesForRelatedPage.get(nodeId);
+        var DOM = params["pointer"]["DOM"];
+        showEditSelectionForRelatedGraph(selectedNode, DOM);
+    };    
+}
+
+
+// functions to complete:
+// use current selectedNodesForRelatedGraph to update the related nodes graph
+function updateRelatedGraph() {
+    console.log("updateRelatedGraph");
+    var windowHeight = window.innerHeight;
+    $("#graphPageForRelatedPage").css("height", windowHeight);
+
+    nodesForRelatedPage = new vis.DataSet([
+        // the hidden node that all nodes should connect to.
+        {id: 0, mass: 0.01, hidden: true}
+    ]);
+    nodesForRelatedPage.get(0)["fixed"] = true;
+
+    edgesForRelatedPage = new vis.DataSet();
+
+    for (var i = selectedNodesForRelatedGraph.length - 1; i >= 0; i--) {
+        var selectedNode = selectedNodesForRelatedGraph[i];
+        addNodeToRelatedGraph(selectedNode, "selected");
+    };
+
+    if (selectedNodesForRelatedGraph.length === 1) {
+        addNodeToRelatedGraph({id: 11, label: "Chinese New Year"}, "1stRelated");
+        addNodeToRelatedGraph({id: 12, label: "China Yuan"}, "1stRelated");
+        addNodeToRelatedGraph({id: 13, label: "Mandarin"}, "1stRelated");
+        addNodeToRelatedGraph({id: 14, label: "China Stock Market"}, "1stRelated");
+        addNodeToRelatedGraph({id: 15, label: "Beijing"}, "1stRelated");
+        addNodeToRelatedGraph({id: 16, label: "Shanghai"}, "1stRelated");
+        addNodeToRelatedGraph({id: 17, label: "Singapore"}, "1stRelated");
+        addNodeToRelatedGraph({id: 18, label: "Hotpot"}, "1stRelated");
+    } else if (selectedNodesForRelatedGraph.length === 2) {
+        addNodeToRelatedGraph({id: 11, label: "Chinese New Year"}, "1stRelated");
+        addNodeToRelatedGraph({id: 12, label: "China Yuan"}, "1stRelated");
+        addNodeToRelatedGraph({id: 13, label: "Asia"}, "1stRelated");
+        addNodeToRelatedGraph({id: 14, label: "Hokkien"}, "1stRelated");
+        addNodeToRelatedGraph({id: 15, label: "Chinatown"}, "1stRelated");
+        addNodeToRelatedGraph({id: 16, label: "Tourism"}, "1stRelated");
+
+        addNodeToRelatedGraph({id: 21, label: "Peking opera"}, "2ndRelated");
+        addNodeToRelatedGraph({id: 22, label: "Alibaba"}, "2ndRelated");
+        addNodeToRelatedGraph({id: 23, label: "Great Fire Wall"}, "2ndRelated");
+        addNodeToRelatedGraph({id: 24, label: "Singapore Airlines"}, "2ndRelated");
+        addNodeToRelatedGraph({id: 25, label: "SouthEast Asia"}, "2ndRelated");
+        addNodeToRelatedGraph({id: 26, label: "ASEAN"}, "2ndRelated");
+        addNodeToRelatedGraph({id: 27, label: "Peranakan"}, "2ndRelated");
+        addNodeToRelatedGraph({id: 28, label: "National Capital"}, "2ndRelated");
+        addNodeToRelatedGraph({id: 29, label: "Malaysia"}, "2ndRelated");
+
+    }
+    
+
+    var container = document.getElementById('network-forRelatedGraph');
+    var data = {
+        nodes: nodesForRelatedPage,
+        edges: edgesForRelatedPage
+    };
+
+    networkForRelatedPage = new vis.Network(container, data, optionsForRelatedPage);
+    networkForRelatedPage.on("click", clickRelatedGraph);
+}
+
+var showGraphForRelatedPage = function(pageID, pageTitle) {
+    selectedNodesForRelatedGraph = [{id: pageID, label: pageTitle}];
+    updateRelatedGraph();
+    var centralNode = nodesForRelatedPage.get(pageID);
+    centralNode[""];
+    // nodesForRelatedPage.update()    
 }
